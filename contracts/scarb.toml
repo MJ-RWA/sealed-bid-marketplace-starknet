@@ -1,0 +1,15 @@
+[package]
+name = "sealed_bid_marketplace"
+version = "0.1.0"
+description = "Private sealed-bid marketplace smart contracts for Starknet"
+edition = "2023_10"
+
+[dependencies]
+starknet = ">=2.6.0"
+
+[dev-dependencies]
+cairo_test = ">=2.6.0"
+
+[lib]
+sierra = true
+casm = true
