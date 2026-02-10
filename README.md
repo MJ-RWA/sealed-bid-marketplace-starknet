@@ -1,20 +1,16 @@
-# Private Sealed-Bid Marketplace (Starknet)
+# Fairlance
 
-A privacy-preserving marketplace where Web3 service providers submit sealed bids for jobs.
+Fairlance is a privacy-preserving sealed-bid marketplace for Web3 services
+built on Starknet.
+
+Freelancers submit hidden bids with price, timeframe and proposal.
+After reveal, the smart contract shortlists the best bids.
+Employers review anonymous proposals and select a winner fairly.
 
 ## MVP Features
+
 - Create job
 - Submit sealed bid
 - Reveal bid
-- On-chain winner selection
-
-## Tech Stack
-- Starknet (Cairo)
-- React
-- Node.js
-- Notion (task tracking)
-
-## Team Structure
-- contracts/ → Cairo Dev
-- frontend/ → Frontend Dev
-- backend/ → Backend Dev
+- Smart contract shortlisting
+- Employer review & selection

@@ -1,76 +1,37 @@
-# 🖥️ Frontend — Sealed Bid Marketplace (MVP)
+# Fairlance Frontend
 
-This folder contains the **frontend application** for the Private Sealed-Bid Marketplace.
+This is the React frontend for Fairlance.
 
-The frontend is responsible for **user interaction only**.
-All fairness, bid validation, and winner selection happen **on-chain**.
+## Responsibilities
 
----
+The frontend handles all user interactions:
 
-## 🎯 Frontend Responsibilities (MVP Scope)
+- Job creation
+- Bid submission
+- Proposal writing
+- Bid reveal
+- Employer review & selection
 
-- Allow users to:
-  - Create a job
-  - Submit a sealed bid
-  - Reveal their bid
-  - View the winning bid
-- Connect UI actions to Starknet smart contract calls
-- Display contract results clearly
+## Bid Submission Flow
 
----
+1. Freelancer enters:
+   - Price
+   - Timeframe
+   - Proposal text
+2. Frontend:
+   - Generates commitment hash
+   - Sends hash to smart contract
+   - Sends proposal text to backend
 
-## 🧠 What the Frontend Does NOT Do
+## Employer Review Flow
 
-- ❌ Does NOT decide winners
-- ❌ Does NOT verify bids
-- ❌ Does NOT store sensitive bid data
-- ❌ Does NOT implement business logic
+- View shortlisted bids
+- Compare price & time
+- Read proposal text
+- Select a winner
 
-> The frontend is a messenger, not a judge.
+## What Frontend Does NOT Handle
 
----
-
-## 📂 Folder Structure
-
-frontend/
-├── src/
-│ ├── components/
-│ │ ├── JobForm.jsx
-│ │ ├── BidForm.jsx
-│ │ ├── RevealForm.jsx
-│ │ └── WinnerCard.jsx
-│ ├── pages/
-│ │ └── Home.jsx
-│ ├── hooks/
-│ │ └── useStarknet.js
-│ ├── services/
-│ │ └── contract.js
-│ ├── App.jsx
-│ └── main.jsx
-│
-├── public/
-├── package.json
-└── README.md
-
-
----
-
-## 🔧 Tech Stack
-
-- React (Vite)
-- JavaScript or TypeScript
-- Starknet.js
-- Basic CSS / TailwindCSS (optional)
-
-> Keep styling simple. Functionality first.
-
----
-
-## 🚀 Getting Started
-
-### Install dependencies
-```bash
-npm install
-
-Start development server
-npm run dev
+- Bid scoring logic
+- Fairness rules
+- Blockchain state validation
