@@ -1,9 +1,0 @@
-{
-  "name": "sealed-bid-backend",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "start": "node src/index.js",
-    "dev": "node src/index.js"
-  }
-}
