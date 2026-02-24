@@ -1,24 +1,37 @@
 import os
 import asyncio
 import threading
-import sys
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from indexer import monitor
+from indexer import monitor  # Import all the logic from indexer.py
 
 # --- THE TRIGGER LOGIC ---
 class RestartTrigger(BaseHTTPRequestHandler):
+    
     def do_GET(self):
-        # Respond to the browser
+        # 1. The "Kill Switch" Route
+        if self.path == '/restart-the-system':
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            response = "<h1>Indexer Restarting...</h1><p>The system is performing a cold boot for the presentation.</p>"
+            self.wfile.write(bytes(response, "utf8"))
+            
+            print("⚠️ MANUAL RESTART signal received from URL. Shutting down for reboot...")
+            os._exit(0) # This kills the process, forcing Render to restart it
+            
+        # 2. The "Health Check" Route
+        else:
+            # Render's bots will hit the root '/' and see this. It keeps the server alive.
+            self.send_response(200)
+            self.send_header('Content-type', 'text/html')
+            self.end_headers()
+            self.wfile.write(bytes("Indexer is Running smoothly.", "utf8"))
+
+    def do_HEAD(self):
+        # Render also sends HEAD requests just to check headers. 
+        # This prevents the "501 Unsupported method" error in the logs.
         self.send_response(200)
-        self.send_header('Content-type', 'text/html')
         self.end_headers()
-        response = "<h1>Indexer Restarting...</h1><p>The system is performing a cold boot for the presentation.</p>"
-        self.wfile.write(bytes(response, "utf8"))
-        
-        print("⚠️ Restart signal received from URL. Shutting down for reboot...")
-        # Mathematically force the process to exit. 
-        # Render will detect the exit and restart the service automatically.
-        os._exit(0)
 
 def run_web_server():
     port = int(os.environ.get("PORT", 10000))
@@ -28,11 +41,11 @@ def run_web_server():
 
 # --- THE EXECUTION SET ---
 async def main():
-    # Run the web server in a separate thread (Parallel Process)
+    # Start the fake web server in a separate thread (Parallel Process)
     web_thread = threading.Thread(target=run_web_server, daemon=True)
     web_thread.start()
 
-    # Start the real Indexer logic
+    # Start the real Indexer logic from indexer.py
     try:
         await monitor()
     except Exception as e:
