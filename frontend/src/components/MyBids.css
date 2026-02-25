@@ -1,0 +1,41 @@
+.bidcontainer{
+     display: flex;
+    border:1px solid var(--border-main);
+    background: var(--Navbar-bg);
+    padding: 15px 25px;
+    border-radius: 5px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.provebtn{
+    display: flex;
+    gap:8px;
+}
+
+.det{
+   padding:5px 10px;
+    border-radius: 5px;
+    border:1px solid var(--border-main);
+    background: var(--button-bg);
+    color: var(--text-primary);
+    font-weight: 600;
+} 
+
+.prove{
+    padding:5px 10px;
+    border-radius: 5px;
+    border:1px solid var(--border-main);
+    background: var(--completed);
+    color: var(--text-primary);
+    font-weight: 600; 
+}
+
+.displayTitle  h2{
+ margin-bottom: 7px;
+}
+
+.commits{
+    font-family: monospace;
+    color: var(--muted-text);
+}

@@ -1,0 +1,64 @@
+:root {
+    --bg-main: rgb(15, 23, 42);
+    --text-primary: rgb(240, 245, 251);
+    --text-secondary: rgb(171, 176, 182);
+    --muted-text: rgb(142, 159, 183);
+    --muted-text-bg:rgba(142, 159, 183, 0.164);
+    --muted-text-border: rgba(142, 159, 183, 0.508);
+    --border-main: rgb(67, 76, 90);
+    --subtle-border: rgb(71, 85, 105);
+    --divider: rgb(51, 65, 85);
+    --Navbar-bg:  rgb(32, 45, 65);
+    --Inner-surfaces: rgb(15, 23, 42);
+    --footer: rgb(18, 28, 50);
+    --Emyr-bg-txt: rgb(79, 70, 229);
+    --Emyr-txt: rgb(129, 140, 248);
+    --Emyr-shadow: rgb(99, 102, 241);
+    --Felr-bg-txt: rgb(5, 150, 105);
+    --Felr-txt: rgb(52, 211, 153);
+    --Felr-shadow: rgb(11, 138, 98);
+    --reveal: rgba(206, 125, 19, 0.637);
+    --reveal-bg: rgba(206, 125, 19, 0.263);
+    --reveal-text: rgba(244, 193, 10, 0.999);
+    --openbid: rgba(12, 201, 22, 0.126);
+    --openbid-bg: rgba(52, 211, 153, 0.174);
+    --completed:rgb(72, 75, 243);
+    --completed-bg: rgba(72, 75, 243, 0.174);
+    --completed-text: rgb(150, 160, 252);
+    --button-bg:rgba(142, 159, 183, 0.223);
+    --connect-bg: rgb(165, 62, 21);
+    --hire-bg:rgba(15, 23, 42, 0.566);
+    --award-bg: rgba(35, 136, 82, 0.219);
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, “Segoe UI”, Helvetica, Arial, sans-serif;
+    font-size: 0.85rem;
+    background: var(--bg-main);
+    color:var(--text-primary);
+}
+
+.app-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Full screen height */
+}
+
+.main-content {
+  flex: 1; /* Pushes footer to bottom */
+  padding:  25px 100px;
+}
+
+@media (max-width: 480px) {
+  body {
+    font-size: 0.8rem; /* Slightly smaller text */
+  }
+
+  .main-content {
+    padding: 15px 20px; /* Reduce side padding */
+  }
+}
+
+

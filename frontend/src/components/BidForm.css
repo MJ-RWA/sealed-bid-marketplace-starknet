@@ -1,0 +1,76 @@
+.status-row{
+    display: flex; 
+    gap:15px;
+    align-items: center;
+    margin-bottom: 10px;
+    justify-content: center;
+}
+
+.commit{
+    border: 1px solid var(--openbid);
+    padding: 6px 3px;
+    color: var(--Felr-txt);
+    background: var(--openbid-bg);
+    font-weight: 560;
+    border-radius: 5px;
+}
+
+.reveal{
+    border: 1px solid var(--muted-text-border);
+    padding: 6px 3px;
+    background: var(--muted-text-bg);
+    font-weight: 560;
+    color: var(--text-secondary);
+    border-radius:5px;
+
+}
+
+.forms{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content:center;
+}
+
+.label1{
+   
+    font-weight: 400;
+    font-family:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 0.8rem;
+    display:block;
+    color: var(--text-secondary);
+}
+
+input{
+    border-radius: 5px;
+    border:1px solid var(--border-main);
+     background: #0f172a;
+      padding: 10px 14px;
+   color: var(--text-secondary);
+   margin-right: 5px;
+}
+
+.submit {
+    display:flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.submit1{
+    border-radius: 5px;
+    padding:10px 35px;
+    width:65%;
+    background:var(--Felr-bg-txt);
+    color:var(--text-main);
+    font-weight: 600;
+}
+
+.span1{
+    display:flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 15px;
+    color: var(--muted-text);
+    font-style: italic;
+    font-size: 0.7rem;
+}

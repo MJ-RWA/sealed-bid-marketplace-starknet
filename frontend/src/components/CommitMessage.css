@@ -1,0 +1,42 @@
+.message{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 4px rgb(11, 162, 53)); }
+  50% { filter: drop-shadow(0 0 10px rgb(11, 162, 53) ); }
+}
+
+.message svg {
+  color: var(--Felr-txt);
+  animation: glow 1.5s infinite alternate;
+}
+
+.message p{
+    color:var(--muted-text);
+    font-style: italic;
+    margin:0;
+}
+
+
+.cancel{
+    
+    display:flex;
+    align-items: center;
+    justify-content: end;
+}
+
+.cancelbtn{
+   border:none;
+    background: none; 
+      color:var(--muted-text);
+      font-weight: 700; 
+}
+
+.cancelbtn:hover{
+    color:var(--text-primary); 
+}

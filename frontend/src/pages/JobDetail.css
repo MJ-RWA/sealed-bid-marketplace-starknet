@@ -1,0 +1,52 @@
+.jobdetail h1{
+    color: var(--text-primary);
+}
+
+.jobdetail p{
+    color: var(--muted-text);
+}
+
+.apply{
+    display: flex;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+    font-weight: 100;
+    font-style: italic;
+    justify-content: center;
+
+}
+
+.cancelbtn{
+   
+    display:flex;
+    align-items: center;
+    justify-content: end;
+  
+   
+}
+
+.cancelbtn button{
+   border:none;
+    background: none; 
+      color:var(--muted-text);
+      font-weight: 700; 
+}
+
+.cancelbtn button:hover{
+    color:var(--text-primary); 
+}
+
+.prove1{
+    padding:5px 10px;
+    border-radius: 5px;
+    border:1px solid var(--border-main);
+    background: var(--completed);
+    color: var(--text-primary);
+    font-weight: 600; 
+}
+
+.reveal-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: right;
+}

@@ -1,0 +1,66 @@
+.role-switcher {
+  position: relative;
+  width: 240px;
+  background: #0f172a;
+  border-radius: 30px;
+  padding: 5px;
+  display: flex;
+  cursor: pointer;
+  border: 1px solid var(--border-main);
+}
+
+.role-switcher button {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-weight: 600;
+  z-index: 2;
+  padding: 10px 0;
+  border-radius: 30px;
+  transition: color 0.3s ease;
+}
+
+.role-switcher button.active {
+  color: white;
+}
+
+.role-switcher .slider {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  width: 47%;
+  height: calc(100% - 10px);
+  background: var(--Felr-txt);
+  border-radius: 30px;
+  transition: transform 0.3s ease;
+  z-index: 1;
+}
+
+/* When freelancer is active */
+.role-switcher.freelancer-active .slider {
+  transform: translateX(100%);
+}
+
+@media (max-width: 480px) {
+
+  .role-switcher {
+    width: 100%;              /* Take full width */
+    max-width: 300px;         /* Prevent it from being too wide */
+    margin: 0 auto;           /* Center it */
+  }
+
+  .role-switcher button {
+    font-size: 0.65rem;       /* Slightly smaller text */
+    padding: 8px 0;
+  
+  }
+
+  .role-switcher .slider {
+    width: 46%;               /* Better alignment for smaller screens */
+  }
+
+
+
+
+}

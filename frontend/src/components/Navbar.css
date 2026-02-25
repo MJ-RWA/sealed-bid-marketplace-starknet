@@ -1,0 +1,212 @@
+.navbar{
+    background-color: var(--Navbar-bg);
+    padding: 8px;
+    border-bottom:1px solid var(--border-main) ;
+    display: flex;
+    align-items: center;
+    justify-content:space-between;
+}
+
+.nav-right {
+    display: flex;
+    justify-content:space-between;
+  
+}
+.nav-right a{
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-right: 16px;
+}
+
+.nav-left{
+    display: flex;
+    align-items: center;
+}
+
+.nav-left h1{
+    color: var(--text-primary);
+    margin: 0;
+    margin-right: 16px;
+}
+
+
+.nav-left p{
+   margin: 0;
+   color:var(--muted-text);
+   font-weight: 400;
+   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   font-size:0.8rem;
+}
+.brand-text h1{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 800;
+    font-size: 1.7rem;
+}
+
+
+@keyframes glow {
+  0%, 100% { filter: drop-shadow(0 0 4px var(--Felr-shadow)); }
+  50% { filter: drop-shadow(0 0 10px var(--Felr-shadow)); }
+}
+
+.logo svg {
+  color: var(--Felr-txt);
+  animation: glow 1.5s infinite alternate;
+}
+
+.nav-links{
+    display:flex;
+    align-items: center;
+}
+
+.nav-links a{
+    color: var(--text-primary);
+    text-decoration: none;
+    margin-left: 16px;
+    font-weight: 400;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    transition: color 0.3s ease;
+   
+}
+
+.myprojects a{
+    color: var(--Felr-txt);
+    margin:0;
+}
+
+.nav-links {
+  display: flex;
+}
+
+
+.divider {
+  margin: 0 10px;
+  color: #999;
+  font-weight: 300;
+}
+
+.Strk{
+    color: var(--muted-text);
+    /* font-weight: 300; */
+    font-size: 0.8rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.wallet-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+.wallet{
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.address{
+    color:var(--text-primary);
+    font-family: monospace;
+}
+
+.butt{
+    border:1px solid var(--border-main);
+    padding: 10px 5px;
+    margin-left: 5px;
+    border-radius: 8px;
+    background: var(--Inner-surfaces);
+    cursor: pointer;
+}
+
+.brand-text p{
+    letter-spacing: 0.1rem;
+}
+
+.wallet1{
+    border-radius: 10px;
+    padding:8px 16px;
+    background:var( --connect-bg);
+    color:var(--text-primary);
+    font-weight: 600;
+    border:1px solid var(--border-main);
+}
+
+
+
+@media (max-width: 480px) {
+
+  .navbar {
+    flex-direction: row;
+    flex-wrap: wrap;             
+    align-items: center;
+    justify-content: space-between;
+    /* padding: 8px 10px; */
+    gap: 6px;
+  }
+
+  /* .nav-left {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  } */
+
+  .logo svg {
+    font-size: 1.5rem;            /* Smaller icon */
+  }
+
+  .brand-text h1 {
+    font-size: 1rem;
+  }
+
+  .brand-text p {
+    display: none;                /* Hide subtitle */
+  }
+
+  .nav-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    position: relative;
+    
+
+  }
+
+  .nav-links a {
+    font-size: 0.75rem;
+    display: flex;
+    
+  }
+
+  .divider {
+    display: none;                /* Cleaner mobile look */
+  }
+
+  .walletnav-wrapper {
+    width: 100%;
+  }
+
+  .wallet {
+    gap: 6px;
+  }
+
+  .Strk {
+    font-size: 0.65rem;
+  }
+
+  .address {
+    max-width: 70px;
+    font-size: 0.65rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .butt {
+    padding: 4px 6px;
+  }
+
+  .wallet1 {
+    padding: 6px 10px;
+    font-size: 0.75rem;
+  }
+
+}
