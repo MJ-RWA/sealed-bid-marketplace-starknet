@@ -1,0 +1,21 @@
+.proposal p{
+    margin:0;
+    color:var(--text-secondary);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+   
+}
+.proposal{
+    display:flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    
+}
+
+.proposal textarea{
+    padding:10px 40px;
+    background: #0f172a;
+    border: 1px solid var(--border-main);
+    border-radius: 5px;
+    color: var(--text-secondary);
+}

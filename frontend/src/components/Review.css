@@ -1,0 +1,91 @@
+.finalistdetail{
+    display:flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.text{
+    font-weight: 700;
+    font-size: 1.1rem;
+     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+     margin-top: 0.8rem;
+}
+
+.contract{
+    font-family:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-style: italic;
+    color: var(--muted-text);
+    font-size: 0.8rem;
+}
+
+.detail p{
+    color: var(--muted-text);
+}
+
+.listcontainer{
+    padding:10px 15px;
+    border:1px solid var(--border-main);
+    background:var(--hire-bg);
+    border-radius: 10px;
+}
+
+.hiredetails{
+    border:1px solid var(--border-main);
+    padding:6px 12px;
+    margin: 10px;
+    background: var(--Navbar-bg);
+    border-radius:10px ;
+}
+
+.walletaddy{
+    font-family: monospace;
+    color:var(--muted-text);
+    font-size: 0.7rem;
+}
+
+.userdetails{
+    display: flex;
+    align-items: center;
+    justify-content:space-between;
+    position: relative;
+}
+
+.STRK{
+    color: var(--Emyr-bg-txt);
+    font-weight: 700;
+    font-family: monospace;
+    font-size: 1rem;
+}
+
+.timeline{
+    font-family:  'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 500;
+    position: absolute;
+    right: 0;
+    left:90px;
+    font-size: 0.8rem;
+}
+
+.hirebut{
+    position: absolute;
+    right:0;
+    bottom: 20px;
+    padding:5px 10px;
+    border-radius: 8px;
+    border:1px solid var(--border-main);
+    background: var(--Emyr-bg-txt);
+    color:var(--text-primary);
+    font-weight: 600;
+}
+
+.hiredetails1{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: var(--muted-text);
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.hiredetails2{
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color:var(--text-secondary);
+}
