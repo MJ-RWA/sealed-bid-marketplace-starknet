@@ -52,7 +52,7 @@ function ExploreMarket({ jobs =[] }) {
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
     const secs = totalSeconds % 60;
-    return `${hrs}h ${mins}m ${secs}s`;
+   return `${hrs}h ${mins.toString().padStart(2, '0')}m ${secs.toString().padStart(2, '0')}s`;
   }
 
 
@@ -64,7 +64,7 @@ function ExploreMarket({ jobs =[] }) {
 
   return (
     <>
-    <div id="cardheading" className="p-8">
+    <div id="cardheading">
       <h1>Active Opportunities</h1>
       <p>Browse opportunities. Seal your bid. Let provable fairness decide the shortlist.</p>
   
@@ -83,7 +83,7 @@ function ExploreMarket({ jobs =[] }) {
           className="job-card-link"
         >
 
-    <div className="mt-5 job-card" style={{ padding:"20px"}}>
+    <div className="job-card" style={{ padding:"20px"}}>
         <div class="jobcarddetail">
             <span  className={state[job.status]}>{job.status}</span>
             <span class="amount">

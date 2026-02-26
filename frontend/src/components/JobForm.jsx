@@ -107,43 +107,45 @@ const navigate = useNavigate();
 
       <br />
 
-      <div class="share">
-
-         
-      <div>
-        <label class="label2">BUDGET RANGE</label>
-      <input 
+      <div className="share">
+  {/* Budget Group */}
+  <div className="input-group">
+    <label className="label2">BUDGET RANGE</label>
+    <input 
       type="text" 
+      className="budget-input"
       placeholder="e.g. 1000-2000 STRK"
       value={budget}
       onChange={(e) => setBudget(e.target.value)}
-     required />
-      </div>
+      required 
+    />
+  </div>
+
+  {/* Bidding Window Group */}
+  <div className="input-group">
+    <label className="label2">BIDDING WINDOW</label>
+    <div className="window-controls">
+      <input
+        name="duration" 
+        type="number" 
+        value={duration}
+        onChange={(e) => setDuration(e.target.value)}
+        className="window-num" 
+      />
+      <select 
+        name="unit" 
+        value={unit}
+        onChange={(e) => setUnit(e.target.value)}
+        className="select1"
+      >
+        <option value="minutes">Minutes</option>
+        <option value="days">Days</option>
+      </select>
+    </div>
+  </div>
+</div>
 
        
-                  <div class="widow1">
-                 <div> <label class="label2">Bidding Window</label></div>
-                    <input
-                     name="duration" 
-                     type="number" 
-                     value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                
-                      className="window" />
-                  
-                    <select 
-                    name="unit" 
-                    onChange={(e) => setUnit(e.target.value)}
-                    value={unit}
-                    class="select1">
-
-                      <option value="minutes">Minutes</option>
-                      <option value="days">Days</option>
-                     </select>
-              </div>
-
-
-       </div>
           <br />
 
        <LogicSlider 
@@ -176,20 +178,24 @@ The system will automatically rank and shortlist bids based on the priority you 
 const overlayStyle = {
   position: "fixed",
   inset: 0,
-  background: "rgba(11, 21, 33, 0.6)",
+  background: "rgba(11, 21, 33, 0.75)",
   backdropFilter: "blur(6px)",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   zIndex: 1000,
+  padding: "15px", // Safety gap for mobile edges
 };
 
 const modalStyle = {
   background: "var(--Navbar-bg)",
-  padding: "30px",
-  borderRadius: "8px",
+  padding: "clamp(15px, 5vw, 30px)", // Scales padding based on screen size
+  borderRadius: "12px",
   width: "100%",
   maxWidth: "500px",
+  maxHeight: "95vh", // Prevents modal from leaving the screen
+  overflowY: "auto", // Enables scroll for long forms
+  position: "relative",
 };
 
 

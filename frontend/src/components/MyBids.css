@@ -6,6 +6,7 @@
     border-radius: 5px;
     align-items: center;
     justify-content: space-between;
+    margin:15px;
 }
 
 .provebtn{
@@ -38,4 +39,29 @@
 .commits{
     font-family: monospace;
     color: var(--muted-text);
+}
+
+.bid-status-tags {
+  display: flex;
+  gap: 10px;
+  margin-top: 5px;
+}
+
+.status-tag {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.bidding { background: #1e293b; color: #818cf8; }
+.reveal { background: #312e81; color: #e0e7ff; }
+
+.commits {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border: 1px solid #10b981;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
 }

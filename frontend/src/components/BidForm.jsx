@@ -14,12 +14,18 @@ const [bidAmount, setBidAmount] = useState("");
   
 
 
-  function handleCommit(e) {
+ function handleCommit(e) {
     e.preventDefault();
 
     if (!bidAmount) return;
 
-    // Prevent double commit
+    // 1. New Check: Prevent employer from bidding on their own job
+    if (address?.toLowerCase() === job.employerAddress?.toLowerCase()) {
+      alert("Action denied: You cannot bid on a job you created.");
+      return;
+    }
+
+    
     if (job.bids.some(b => b.bidder === address)) {
       alert("You already committed a bid.");
       return;
@@ -34,22 +40,69 @@ const [bidAmount, setBidAmount] = useState("");
       revealed: false
     };
 
-    // const updatedJobs = jobs.map(j =>
-    //   j.id === job.id
-    //     ? { ...j, bids: [...j.bids, newBid] }
-    //     : j
-    // );
-
-   onSubmitBid(newBid);
-   
+    onSubmitBid(newBid);
+    
     setProposal("");
     setBidAmount("");
     setTimeframe("");
-    navigate("commit-message")
+    navigate("commit-message");
     setCommitSuccess(true);
   }
 
 
+
+  //  backend call 
+// async function handleCommit(e) { 
+//   e.preventDefault();
+
+//   if (!bidAmount || loading) return; 
+
+
+//   if (address?.toLowerCase() === job.employerAddress?.toLowerCase()) {
+//     alert("You cannot bid on your own job.");
+//     return;
+//   }
+
+//   setLoading(true); 
+
+//   try {
+   
+//     const response = await fetch(`${process.env.REACT_APP_API_URL}/jobs/${job.id}/bids`, {
+//       method: 'POST',
+//       headers: { 'Content-Type': 'application/json' },
+//       body: JSON.stringify({
+//         bidder: address,
+//         amount: bidAmount,
+//         timeframe: timeframe,
+//         proposal: proposal,
+//         committedAt: Date.now(),
+//         revealed: false
+//       }),
+//     });
+
+//     if (!response.ok) {
+//       const errorData = await response.json();
+//       throw new Error(errorData.message || "Failed to submit bid");
+//     }
+
+//     const savedBid = await response.json();
+
+    
+//     onSubmitBid(savedBid); 
+    
+//     setProposal("");
+//     setBidAmount("");
+//     setTimeframe("");
+//     navigate("commit-message");
+//     setCommitSuccess(true);
+
+//   } catch (error) {
+//     console.error("Submission Error:", error);
+//     alert(error.message);
+//   } finally {
+//     setLoading(false); 
+//   }
+// }
 
   return (
     <div>
@@ -68,20 +121,30 @@ const [bidAmount, setBidAmount] = useState("");
         </div>
         <br />
       <form onSubmit={handleCommit}>
-        <div class="forms">
-        <div>
-          <label class="label1">PRICE (STRK)</label>
-          <input type="text" placeholder="Enter your bid amount" value={bidAmount} onChange={(e) => setBidAmount(e.target.value)} required />
-        </div>
+        <div className="forms"> 
+    <div className="input-wrap"> 
+      <label className="label1">PRICE (STRK)</label>
+      <input 
+        type="text" 
+        className="bid-input" 
+        placeholder="Enter your bid amount" 
+        value={bidAmount} 
+        onChange={(e) => setBidAmount(e.target.value)} 
+        required 
+      />
+    </div>
 
-
-        <div>
-         <label class="label1">TIMEFRAME (Week/Days)</label>
-        <input type="text"  required value={timeframe}
-        onChange={(e) => setTimeframe(e.target.value)}/>
-        
-        </div>
-       </div>
+    <div className="input-wrap">
+      <label className="label1">TIMEFRAME (Week/Days)</label>
+      <input 
+        type="text" 
+        className="bid-input" 
+        required 
+        value={timeframe}
+        onChange={(e) => setTimeframe(e.target.value)}
+      />
+    </div>
+  </div>
        <br />
        
         <ProposalForm 
@@ -97,6 +160,7 @@ const [bidAmount, setBidAmount] = useState("");
           <span class="span1">Warning: Your bid cannot be changed once commited. The Hash ensures fairness</span>
           {commitSuccess && <p>Bid successfully committed!</p>}
       </form>
+
 
       
     </div>

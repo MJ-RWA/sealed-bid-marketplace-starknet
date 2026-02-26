@@ -1,5 +1,6 @@
+
 :root {
-    --bg-main: rgb(15, 23, 42);
+    --bg-main: rgba(7, 12, 35, 0.974);
     --text-primary: rgb(240, 245, 251);
     --text-secondary: rgb(171, 176, 182);
     --muted-text: rgb(142, 159, 183);
@@ -8,14 +9,14 @@
     --border-main: rgb(67, 76, 90);
     --subtle-border: rgb(71, 85, 105);
     --divider: rgb(51, 65, 85);
-    --Navbar-bg:  rgb(32, 45, 65);
+    --Navbar-bg:  rgba(29, 39, 66, 0.799);;
     --Inner-surfaces: rgb(15, 23, 42);
-    --footer: rgb(18, 28, 50);
+    --footer: rgba(18, 28, 50, 0.905);
     --Emyr-bg-txt: rgb(79, 70, 229);
     --Emyr-txt: rgb(129, 140, 248);
     --Emyr-shadow: rgb(99, 102, 241);
-    --Felr-bg-txt: rgb(5, 150, 105);
-    --Felr-txt: rgb(52, 211, 153);
+    --Felr-bg-txt: rgb(16, 185, 129);
+    --Felr-txt: rgb(16, 185, 129);
     --Felr-shadow: rgb(11, 138, 98);
     --reveal: rgba(206, 125, 19, 0.637);
     --reveal-bg: rgba(206, 125, 19, 0.263);

@@ -71,7 +71,7 @@ const modalStyle = {
   background: "var(--Navbar-bg)",
   padding: "30px",
   borderRadius: "8px",
-  width: "100%",
+  width: "85%",
   maxWidth: "450px",
 };
 
