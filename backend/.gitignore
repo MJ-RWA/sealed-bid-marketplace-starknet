@@ -1,0 +1,8 @@
+.env
+*keystore.json
+*account.json
+
+venv/
+__pycache__/
+*.sqlite3
+target/
