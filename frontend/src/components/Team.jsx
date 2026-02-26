@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import mekjah from '../assets/mekjah.jpeg';
 import joel from '../assets/joel.jpeg';
 import erasmus from '../assets/erasmus.jpeg';
-import Ashraf from '../assets/ashraf.jpeg';
+import Ashraf from '../assets/Ashraf.jpeg';
 import daniel from '../assets/daniel.jpeg';
 
 
