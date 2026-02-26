@@ -5,8 +5,10 @@
     justify-content: center;
 }
 
-.jobinput{
-   width:360px;
+.jobinput {
+    width: 100%; /* Changed from 360px */
+    max-width: 400px; /* Limits size on desktop */
+    box-sizing: border-box;
 }
 
 .share{
@@ -45,12 +47,16 @@
     display:block;
 }
 
-.text textarea{
-   background:  #0f172a;
-   border-radius: 5px;
-  width: 385px;
-  border: 1px solid var(--border-main);
-  color:var(--text-secondary);
+.text textarea {
+    background: #0f172a;
+    border-radius: 5px;
+    width: 100%; /* Changed from 385px */
+    max-width: 400px;
+    min-height: 100px;
+    border: 1px solid var(--border-main);
+    color: var(--text-secondary);
+    box-sizing: border-box;
+    padding: 10px;
 }
 
 .label2{
@@ -88,12 +94,113 @@ font-weight: 600;
 border:var(--border-main);
 }
 
-.notice{
-padding: 16px;
-line-height: 1.5;
-width: 405px;
-font-size: 0.7rem;
-font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-font-style: italic;
-color: var(--muted-text);
+.notice {
+    padding: 16px;
+    line-height: 1.5;
+    width: 100%; 
+    max-width: 400px;
+    box-sizing: border-box;
+    font-size: 0.7rem;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-style: italic;
+    color: var(--muted-text);
+    text-align: left;
+}
+
+
+.share {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto; 
+}
+.input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1; 
+}
+
+
+.budget-input, .window-num, .select1 {
+    height: 42px; 
+    background: #0f172a;
+    border: 1px solid var(--border-main);
+    color: white;
+    border-radius: 5px;
+    padding: 0 12px;
+    box-sizing: border-box;
+}
+
+
+.budget-input {
+    width: 100%;
+}
+
+.window-controls {
+    display: flex;
+    gap: 5px;
+    width: 100%;
+}
+
+
+.window-num {
+    width: 60px;
+    text-align: center;
+}
+
+
+.select1 {
+    flex: 1; 
+    cursor: pointer;
+}
+
+
+.budget-input:focus, .window-num:focus, .select1:focus {
+    outline: none;
+    border-color: #818cf8;
+}
+
+.share {
+  display: flex;
+  gap: 20px;
+  width: 100%;
+}
+
+
+@media (max-width: 600px) {
+  .share {
+    flex-direction: column; 
+    gap: 15px;
+  }
+
+  .input-group {
+    width: 100%;
+  }
+
+  .window-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr; 
+    gap: 10px;
+  }
+
+  .job h1 {
+    font-size: 1.4rem;
+    text-align: center;
+  }
+
+  
+  .btns {
+    flex-direction: column-reverse; 
+    gap: 10px;
+  }
+
+  .btn, .btn2 {
+    width: 100%;
+    padding: 12px;
+  }
 }

@@ -20,9 +20,9 @@
   border-radius: 30px;
   transition: color 0.3s ease;
 }
-
+  
 .role-switcher button.active {
-  color: white;
+  color: var(--text-main);
 }
 
 .role-switcher .slider {
@@ -40,7 +40,10 @@
 /* When freelancer is active */
 .role-switcher.freelancer-active .slider {
   transform: translateX(100%);
+  background-color: var(--Emyr-bg-txt);
 }
+
+
 
 @media (max-width: 480px) {
 
@@ -63,4 +66,6 @@
 
 
 
+
 }
+

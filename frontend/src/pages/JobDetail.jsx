@@ -24,7 +24,26 @@ function changeStatus(newStatus) {
   );
 }
 
+useEffect(() => {
+  // Only check if the job is still in the BIDDING phase
+  if (job && job.status === "BIDDING" && job.deadline) {
+    const checkDeadline = () => {
+      const now = Date.now();
+      if (now >= job.deadline) {
+        console.log("Deadline reached! Switching to REVEAL mode.");
+        changeStatus("REVEAL");
+      }
+    };
 
+    // 1. Check immediately when the component loads
+    checkDeadline();
+
+    // 2. Set an interval to check every second (for live countdowns)
+    const interval = setInterval(checkDeadline, 1000);
+
+    return () => clearInterval(interval); // Cleanup
+  }
+}, [job, changeStatus]);
 
 // const handleReveal = (bid) => {
 //   const updatedJobs = jobs.map(j => {
@@ -88,9 +107,7 @@ function handleReveal(bid) {
         <span className="apply">Apply for this job by submitting your bid</span>
         <BidForm job={job} jobs={jobs} setJobs={setJobs} address={address} onSubmitBid={handleCommitBid} />
        <Outlet />
-       <button onClick={() => changeStatus("REVEAL")}>
-      Move to Reveal
-    </button>
+      
       </div>
     </div>
   );
@@ -106,24 +123,28 @@ function handleReveal(bid) {
         <hr />
    
         {job?.bids?.map((b) => (
-  <div key={b.bidder}>
-    <span>{b.bidder.slice(0,6)}...</span>
+  <div key={b.bidder} className="bid-row">
+    <span>{b.bidder.slice(0, 6)}...{b.bidder.slice(-4)}</span>
 
     {!b.revealed && (
       <div className="reveal-container">
-        <button
-          className="prove1"
-          onClick={() => handleReveal(b)}
-        >
-          Reveal Bid
-        </button>
+        {/* Check if current address owns this bid */}
+        {address === b.bidder ? (
+          <button className="prove1" onClick={() => handleReveal(b)}>
+            Reveal My Bid
+          </button>
+        ) : (
+          <span className="text-slate-500 italic">Waiting for bidder...</span>
+        )}
       </div>
     )}
 
     {b.revealed && (
-      <span>
-        Revealed: AMOUNT: {b.amount} TIMEFRAME: {b.timeframe} PROPOSAL: {b.proposal}
-      </span>
+      <div className="revealed-data">
+        <strong>Amount:</strong> {b.amount} STRK | 
+        <strong> Time:</strong> {b.timeframe} | 
+        <strong> Proposal:</strong> {b.proposal}
+      </div>
     )}
   </div>
 ))}
@@ -169,7 +190,7 @@ const modalStyle = {
   background: "var(--Navbar-bg)",
   padding: "20px",
   borderRadius: "8px",
-  width: "100%",
+  width: "90%",
   maxWidth: "600px",
 };
 

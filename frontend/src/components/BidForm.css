@@ -28,8 +28,8 @@
 .forms{
     display: flex;
     flex-direction: row;
-    align-items: center;
-    justify-content:center;
+   gap:15px;
+   width:100%
 }
 
 .label1{
@@ -48,6 +48,7 @@ input{
       padding: 10px 14px;
    color: var(--text-secondary);
    margin-right: 5px;
+
 }
 
 .submit {
@@ -58,11 +59,15 @@ input{
 
 .submit1{
     border-radius: 5px;
-    padding:10px 35px;
-    width:65%;
+    padding:12px 35px;
+    width:100%;
     background:var(--Felr-bg-txt);
     color:var(--text-main);
     font-weight: 600;
+    max-width: 300px;
+    border: none;
+    cursor: pointer;
+
 }
 
 .span1{
@@ -73,4 +78,50 @@ input{
     color: var(--muted-text);
     font-style: italic;
     font-size: 0.7rem;
+}
+
+.input-wrap {
+    flex: 1; /* Both inputs take equal width on desktop */
+    display: flex;
+    flex-direction: column;
+}
+
+.bid-input {
+    width: 100%;
+    box-sizing: border-box; 
+    border-radius: 5px;
+    border: 1px solid var(--border-main);
+    background: #0f172a;
+    padding: 10px 14px;
+    color: var(--text-secondary);
+}
+
+
+@media (max-width: 600px) {
+    .forms {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .status-row {
+        flex-direction: column; 
+        gap: 8px;
+    }
+
+    .status {
+        width: 100%; 
+        text-align: center;
+        font-size: 0.8rem;
+    }
+
+    .submit1 {
+        width: 100%; 
+        max-width: none;
+        padding: 14px;
+    }
+
+    .span1 {
+        text-align: center;
+        padding: 0 10px;
+    }
 }

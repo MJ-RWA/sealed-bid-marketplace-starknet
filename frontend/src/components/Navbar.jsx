@@ -7,6 +7,7 @@ import { faLock } from "@fortawesome/free-solid-svg-icons";
 import "./Navbar.css";
 import RoleSwitcher from "./RoleSwitcher";
 
+
 function Navbar({ address, connect, disconnect, switchAccount, role, setRole }) {
     const location = useLocation();
      const shortenAddress = (address) => {
@@ -14,128 +15,64 @@ function Navbar({ address, connect, disconnect, switchAccount, role, setRole }) 
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
+
     return (
-
-   
-    <nav class="navbar">
-
-     
-      <div class="nav-left">
-        
-        <div class="logo">
-          <FontAwesomeIcon icon={faLock} size="3x"/>
+  <nav className={`navbar ${role === "freelancer" ? "freelancer-active" : "employer-active"}`}>
+    <div className="nav-top-row">
+      <div className="nav-left">
+        <div className="logo">
+          <FontAwesomeIcon icon={faLock} size="3x" className="icon-role" />
         </div>
-
-        <div class="brand-text">
-          <h1>
-           Fairlance
-          </h1>
-          <p>
-            {role === "employer" && "EMPLOYER DASHBOARD"}
-            {role === "freelancer" && "FREELANCER WORKSPACE"}
-            </p>
+        <div className="brand-text">
+          <h1>Fairlance</h1>
+          <p>{role === "employer" ? "EMPLOYER DASHBOARD" : "FREELANCER WORKSPACE"}</p>
         </div>
       </div>
 
-<div></div>
-      
       <div className="nav-right">
-
-        
-        {/* <div class="role-switcher" id="roleSwitcher">
-          <div class="slider"></div>
-          <button class="active" data-role="employer">Employer</button>
-          <button data-role="freelancer">Freelancer</button>
-          
-        </div> */}
-
-        {address && (
-         <>
-      <RoleSwitcher role={role} setRole={setRole}/>
-
-        </>
-        )}
-
+        {address && <RoleSwitcher role={role} setRole={setRole} />}
       </div>
+    </div>
 
-      <div class="nav-links">
-
-
+    <div className="nav-bottom-row">
+      <div className="nav-links">
         {role === "employer" && (
-            <> 
-        <div class="myprojects">
-          <Link to="Myprojects">My Projects </Link>
-          <span className="divider">|</span>
-        </div>
-         </>
-     )}
-
-
-         {role === "employer" && (
-            <>
-       <Link to="/create-job" state={{ background: location }}>
-      Post a Job
-       </Link>
-     <span className="divider">|</span>
-       </>
-     )}
-        
-       
-       <div>
-           <Link to="/ExploreMarket">Explore Market</Link>
-           <span className="divider">|</span>
-       </div>
-   
-
-    {role === "freelancer" && (
-    
-       <div class="mybids">
-            <Link to="/MyBids">My Bids</Link> 
-       </div>
-
-    )}
-       </div>
+          <>
+            <Link to="/MyProjects">My Projects</Link>
+            <span className="divider">|</span>
+            <Link to="/create-job">Post a Job</Link>
+            <span className="divider">|</span>
+          </>
+        )}
+        <Link to="/ExploreMarket">Explore Market</Link>
+        {role === "freelancer" && (
+          <>
+            <span className="divider">|</span>
+            <Link to="/MyBids">My Bids</Link>
+          </>
+        )}
+      </div>
 
       <div className="walletnav-wrapper">
-
-  {/* If NOT connected */}
-  {!address && (
-    <div className="connect-wallet">
-      <button onClick={connect} className="wallet1">
-       <FontAwesomeIcon icon={faWallet} /> Connect Wallet
-      </button>
-    </div>
-  )}
-
-  {/* If connected */}
-  {address && (
-   <>
-
-    <div className="walletnav">
-      <div className="wallet">
-        <div className="wallet-info">
-          <span className="Strk">WALLET ADDRESS</span>
-          <span className="address">{shortenAddress(address)}</span>
-        </div>
-
-        <div className="wallet-actions">
-          <button onClick={switchAccount} className="butt">
-            <FontAwesomeIcon style={{color:"var(--text-primary)"}} icon={faArrowRightArrowLeft} size="lg" />
+        {!address ? (
+          <button onClick={connect} className="wallet1">
+            <FontAwesomeIcon icon={faWallet} /> Connect
           </button>
-
-          <button onClick={disconnect} className="butt">
-            <FontAwesomeIcon style={{color:"var(--text-primary)"}} icon={faArrowRightFromBracket} size="lg" />
-          </button>
-        </div>
+        ) : (
+          <div className="wallet">
+            <div className="wallet-info">
+              <span className="address">{shortenAddress(address)}</span>
+            </div>
+            <div className="wallet-actions">
+              <button onClick={switchAccount} className="butt"><FontAwesomeIcon icon={faArrowRightArrowLeft} /></button>
+              <button onClick={disconnect} className="butt"><FontAwesomeIcon icon={faArrowRightFromBracket} /></button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
-    </>
-  )}
-
-</div>
-    </nav>
-
-    );
+  </nav>
+);
 }
 
 export default Navbar;

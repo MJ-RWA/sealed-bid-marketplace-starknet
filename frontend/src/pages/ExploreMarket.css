@@ -21,10 +21,15 @@
   padding: 20px;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
-  background:var(--footer) ;
+  background:var(--Navbar-bg); ;
   border-radius: 15px;
   margin-right: 100px;
   margin-top: 20px;
+}
+.job-card h2 {
+  font-size: 1.5rem;
+  color: var(--text-main);
+  font-weight: 600;
 }
 
 .job-card:hover {
@@ -37,11 +42,14 @@
 
 #cardheading p{
   color:var(--text-secondary);
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
 
 #cardheading h1{
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif ;
-  font-size: 2rem;
+  font-size: 2.5rem;
+  font-weight: 600;
+  color: var(--text-main);
 }
 
 .jobcarddetail{
@@ -118,6 +126,7 @@ hr {
   gap: 10px;
   font-family: monospace;
   color:var(--muted-text);
+  font-variant: tabular-nums;
 }
 .employer{
   display: flex;

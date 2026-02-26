@@ -1,34 +1,54 @@
-import { Link, useParams } from "react-router-dom";
-import "./MyBids.css"
+import { Link } from "react-router-dom";
+import "./MyBids.css";
 
-function MyBids ({ job }) {
- 
+function MyBids({ jobs, address }) {
+  // 1. Filter jobs: Show only if the current user has a bid in that job
+  const myBids = jobs.filter(job => 
+    job && job.bids?.some(bid => bid.bidder.toLowerCase() === address?.toLowerCase())
+  );
 
   return (
-    <>
-    <div>
-     <h2>My Active Bids</h2>
-       <div class="bidcontainer">
-       
-       <div class="displayTitle">
-        <h2>Job title</h2>
-        <span class="commits">Comitted</span>
-      
-      </div>
-        <div class="provebtn">
-           
-            <button class="prove">Reveal & Prove</button>
-            <Link to="jobDetail">
-            <button class="det">Job Details</button>
-            </Link>
-        </div>
-       </div>
+    <div className="my-bids-page">
+      <h2>My Active Bids</h2>
+
+      {myBids.length === 0 ? (
+        <p className="no-bids">You haven't placed any bids yet.</p>
+      ) : (
+        myBids.map(job => {
+          // Find the specific bid placed by the current user for this job
+          const userBid = job.bids.find(b => b.bidder.toLowerCase() === address?.toLowerCase());
+
+          return (
+            <div key={job.id} className="bidcontainer">
+              <div className="displayTitle">
+                <h2>{job.title}</h2>
+                <div className="bid-status-tags">
+                  <span className={`status-tag ${job.status.toLowerCase()}`}>
+                    Phase: {job.status}
+                  </span>
+                  {userBid?.revealed && <span className="commits">Revealed</span>}
+                  {!userBid?.revealed && <span className="commits">Committed</span>}
+                </div>
+              </div>
+
+              <div className="provebtn">
+                {/* 2. Show Reveal button only during REVEAL phase and if not already revealed */}
+                {job.status === "REVEAL" && !userBid?.revealed && (
+                   <Link to={`/jobs/${job.id}`}>
+                      <button className="prove">Reveal & Prove</button>
+                   </Link>
+                )}
+
+                <Link to={`/jobs/${job.id}`}>
+                  <button className="det">View Job Details</button>
+                </Link>
+              </div>
+            </div>
+          );
+        })
+      )}
     </div>
-    
-    </>
-  )
-
-
+  );
 }
 
 export default MyBids;
