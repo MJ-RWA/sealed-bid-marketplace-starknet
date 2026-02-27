@@ -45,7 +45,7 @@ function closeModal() {
               style={{color: "#16d022",}}
               size="5x" />
                 <h3>Bid commit successful</h3>
-                <p>Your bid has been cryptographically committed to StarkNet.</p>
+                <p>Your bid has been cryptographically committed.</p>
            </div>
            </div>
            </div>

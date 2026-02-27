@@ -67,7 +67,7 @@ function handleReveal(bid) {
     )
   };
   onSubmitReveal(updatedJob); // update App.jsx state
-  alert("Bid revealed! (mock)");
+  alert("Bid revealed!");
 }
 
 
