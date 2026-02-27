@@ -151,7 +151,7 @@ function MyProjects({ jobs, setJobs, address }) {
 };
   return (
     <>
-      <h2>Jobs I've Posted</h2>
+      <h2 className="posted">Jobs I've Posted</h2>
 
       {myJobs.length === 0 && (
         <p>You haven't posted any jobs yet.</p>
@@ -161,8 +161,8 @@ function MyProjects({ jobs, setJobs, address }) {
         <div key={job.id} className="container">
 
           <div className="swaphead">
-            <h2>{job.title}</h2>
-            <p>{job.description}</p>
+            <h1 className="projh">{job.title}</h1>
+            <p className="projp">{job.description}</p>
 
             <p className="swap">
               {job.winner

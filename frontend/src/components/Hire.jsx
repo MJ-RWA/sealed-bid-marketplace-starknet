@@ -143,7 +143,7 @@ const background = location.state?.background;
       > ✕</button>
       </div>
      <div className="HireContainer"> 
-      <h1>Confirm Hire</h1>
+      <h1 className="projh">Confirm Hire</h1>
       <div className="intensive">
       <p className="HireT">JOB: {job.title}</p>
       <p className="HireE">Selected bidder: <span className="monos">{bidder}</span></p>

@@ -6,9 +6,10 @@
 }
 
 .jobinput {
-    width: 100%; /* Changed from 360px */
-    max-width: 400px; /* Limits size on desktop */
+    width: 100%;
+    max-width: 500px; 
     box-sizing: border-box;
+    padding: 5px 60px;
 }
 
 .share{
@@ -50,19 +51,22 @@
 .text textarea {
     background: #0f172a;
     border-radius: 5px;
-    width: 100%; /* Changed from 385px */
-    max-width: 400px;
+    /* width: 100%;  */
+    max-width: 600px;
     min-height: 100px;
     border: 1px solid var(--border-main);
     color: var(--text-secondary);
     box-sizing: border-box;
-    padding: 10px;
+    padding: 10px 80px;
+    font-size: 0.8rem;
+    font-weight: 400;
 }
 
 .label2{
     display: flex;
     color: var(--text-secondary);
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif ;
+    width:75%
 }
 
 .btn{

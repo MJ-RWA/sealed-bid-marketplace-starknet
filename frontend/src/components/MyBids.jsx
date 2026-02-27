@@ -9,10 +9,10 @@ function MyBids({ jobs, address }) {
 
   return (
     <div className="my-bids-page">
-      <h2>My Active Bids</h2>
+      <h2 className="projh">My Active Bids</h2>
 
       {myBids.length === 0 ? (
-        <p className="no-bids">You haven't placed any bids yet.</p>
+        <p className="projp">You haven't placed any bids yet.</p>
       ) : (
         myBids.map(job => {
           // Find the specific bid placed by the current user for this job
@@ -21,9 +21,9 @@ function MyBids({ jobs, address }) {
           return (
             <div key={job.id} className="bidcontainer">
               <div className="displayTitle">
-                <h2>{job.title}</h2>
+                <h2 className="projh">{job.title}</h2>
                 <div className="bid-status-tags">
-                  <span className={`status-tag ${job.status.toLowerCase()}`}>
+                  <span className={`state ${job.status.toLowerCase()}`}>
                     Phase: {job.status}
                   </span>
                   {userBid?.revealed && <span className="commits">Revealed</span>}

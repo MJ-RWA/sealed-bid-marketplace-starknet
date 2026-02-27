@@ -83,7 +83,7 @@ const navigate = useNavigate();
          
 
       <div class="job">
-      <h1>Create Job Offer</h1>
+      <h1 className="projh">Create Job Offer</h1>
 
       <br />
       <label class="label2">PROJECT TITLE</label>

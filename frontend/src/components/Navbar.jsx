@@ -38,17 +38,17 @@ function Navbar({ address, connect, disconnect, switchAccount, role, setRole }) 
       <div className="nav-links">
         {role === "employer" && (
           <>
-            <Link to="/MyProjects">My Projects</Link>
+            <Link to="/MyProjects" className="mypronav">My Projects</Link>
             <span className="divider">|</span>
-            <Link to="/create-job">Post a Job</Link>
+            <Link to="/create-job" className="mypronav">Post a Job</Link>
             <span className="divider">|</span>
           </>
         )}
-        <Link to="/ExploreMarket">Explore Market</Link>
+        <Link to="/ExploreMarket" className="mypronav">Explore Market</Link>
         {role === "freelancer" && (
           <>
             <span className="divider">|</span>
-            <Link to="/MyBids">My Bids</Link>
+            <Link to="/MyBids" className="mypronav">My Bids</Link>
           </>
         )}
       </div>

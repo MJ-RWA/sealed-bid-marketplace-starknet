@@ -25,8 +25,8 @@ function Review ({ jobs }) {
        <div class="detail">
 
 
-         <h2>{job?.title}</h2>
-         <p>{job?.description}</p>
+         <h2 className="projh">{job?.title}</h2>
+         <p className="projp">{job?.description}</p>
       </div> 
 
 
@@ -51,9 +51,9 @@ function Review ({ jobs }) {
       <p className="walletaddy">{bid.bidder}</p>
           
       <div className="userdetails">
-        <span className="STRK">{bid.amount} STRK</span>
+        <span className="STRK">{bid.amount}</span>
         <span className="timeline">
-         Timeframe: {bid.timeframe ? `Week ${bid.timeframe}` : "N/A"}
+         Timeframe: {bid.timeframe ? ` ${bid.timeframe} Week` : "N/A"}
         </span>
 
         <Link to={`/hire/${job.id}/${bid.bidder}`}>

@@ -64,12 +64,14 @@
 .HireT{
     font-size: 1.3rem;
     font-family:Verdana, Geneva, Tahoma, sans-serif;
+    color:var(--text-secondary);
 }
 
  .HireE{
-    font-size: 0.7rem;
+    font-size: 0.5rem;
     font-weight: 500;
-    
+    margin-top: 10px;
+    color:var(--text-secondary);
 } 
 
 .monos{
