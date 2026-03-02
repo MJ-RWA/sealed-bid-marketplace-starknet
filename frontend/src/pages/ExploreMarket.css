@@ -123,10 +123,12 @@ hr {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 10px;
+  /* gap: 10px; */
   font-family: monospace;
   color:var(--muted-text);
   font-variant: tabular-nums;
+  margin-right: 0;
+  margin-top: 0;
 }
 .employer{
   display: flex;
@@ -138,4 +140,32 @@ hr {
 .deadline-time{
   color: var(--Felr-txt);
   font-weight: 600;
+}
+
+
+.deadline-time {
+  font-weight: bold;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: all 0.3s ease; /* Smooth color transition */
+}
+
+.active {
+  color: #2e7d32; 
+  background-color: #e8f5e9;
+}
+
+.expired {
+  color: #d32f2f; 
+   border:none;
+  text-transform: uppercase;
+  font-size: 0.5rem;
+  letter-spacing: 0.5px;
+  animation: pulse 2s infinite; /* Optional: make it blink slightly */
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
 }

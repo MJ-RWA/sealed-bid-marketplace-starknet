@@ -24,7 +24,8 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const background = location.state && location.state.background;
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [pendingRole, setPendingRole] = useState(null);
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [walletIndex, setWalletIndex] = useState(0);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
@@ -41,24 +42,49 @@ function App() {
 
   // Helper for role selection
   const handleRoleSelection = (selectedRole) => {
-    setRole(selectedRole);
-    navigate("/ExploreMarket", { replace: true });
+    setPendingRole(selectedRole);
   };
 
 
 
 
-  const connect = () => {
+ const connect = async () => {
+  // 1. Check for the role BEFORE setting loading to true
+  if (!pendingRole) {
+    return alert("Please select a role first!");
+  }
+
+  setIsLoading(true);
+
+  try {
     const wallet = TEST_WALLETS[walletIndex];
+    
+    // 2. Set your states
     setAddress(wallet);
-    setRole("employer");
+    setRole(pendingRole);
+
+    // 3. Save to LocalStorage
     localStorage.setItem("walletAddress", wallet);
-  };
+    localStorage.setItem("userRole", pendingRole);
+
+    if (wallet) {
+      navigate("/ExploreMarket");
+    }
+
+
+  } catch (error) {
+    console.error("Connection failed:", error);
+    alert("Failed to connect wallet. Please try again.");
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   const disconnect = () => {
     setAddress(null);
     setRole(null);
     localStorage.removeItem("walletAddress");
+    localStorage.removeItem("userRole");
     navigate("/");
   };
 
@@ -91,7 +117,7 @@ function App() {
             />
             <Route 
               path="/login" 
-              element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} />} 
+              element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} 
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
@@ -145,6 +171,10 @@ function App() {
                 isOpen={true} 
                 onClose={() => navigate(-1)} 
                 onSelectRole={handleRoleSelection} 
+                pendingRole={pendingRole}
+                onConnect={connect}
+                setPendingRole={setPendingRole}
+                loading={isLoading}
               />
             } 
           />
