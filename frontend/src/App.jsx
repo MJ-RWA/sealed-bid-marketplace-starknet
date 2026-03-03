@@ -150,8 +150,8 @@ function App() {
             <Route path="employer-review" element={<EmployerReview />} />
             <Route path="Myprojects" element={<MyProjects jobs={jobs} setJobs={setJobs} address={address}/>} />
             <Route path="create-job" element={<JobForm address={address} setJobs={setJobs}/>} />
-            <Route path="MyBids" element={<MyBids jobs={jobs} address={address} />} />
-            <Route path="MyBids/jobDetail" element={<BidJobDetail jobs={jobs} address={address} />} />
+            <Route path="MyBids" element={<MyBids jobs={jobs} address={address} role={role} />} />
+            <Route path="MyBids/jobDetail" element={<BidJobDetail jobs={jobs} address={address} role={role} />} />
             <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
             <Route path="Bidform" element={<BidForm />} />
             
@@ -178,7 +178,7 @@ function App() {
               />
             } 
           />
-          <Route path="/jobs/:id" element={<JobDetailWrapper jobs={jobs} setJobs={setJobs} address={address}/>} />
+          <Route path="/jobs/:id" element={<JobDetailWrapper jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
           <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} />} />
           <Route path="/review/:jobId" element={<Review jobs={jobs} setJobs={setJobs} address={address} />} />
           <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs}/>} />

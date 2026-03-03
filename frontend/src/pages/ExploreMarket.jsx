@@ -66,6 +66,7 @@ function ExploreMarket({ jobs =[] }) {
 
   return (
     <>
+    <div className="card-container">
     <div id="cardheading">
       <h1>Active Opportunities</h1>
       <p>Browse opportunities. Seal your bid. Let provable fairness decide the shortlist.</p>
@@ -119,7 +120,7 @@ function ExploreMarket({ jobs =[] }) {
 
       ))}
 </div>
-      
+</div>      
     </>
   );
 }

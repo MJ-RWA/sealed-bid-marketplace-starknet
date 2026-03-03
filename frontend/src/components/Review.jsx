@@ -51,7 +51,7 @@ function Review ({ jobs }) {
       <p className="walletaddy">{bid.bidder}</p>
           
       <div className="userdetails">
-        <span className="STRK">{bid.amount}</span>
+        <span className="STRK">{bid.amount} STRK</span>
         <span className="timeline">
          Timeframe: {bid.timeframe ? ` ${bid.timeframe} Week` : "N/A"}
         </span>

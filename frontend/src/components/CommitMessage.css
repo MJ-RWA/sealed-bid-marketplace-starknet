@@ -19,9 +19,16 @@
 .message p{
     color:var(--muted-text);
     font-style: italic;
-    margin:0;
+    margin-top:10px;
+    font-size:0.7rem ;
 }
 
+.message h3{
+    font-weight: 600;
+    margin-top: 10px;
+    opacity: 1;
+    font-size: 1.2rem;
+}
 
 .cancel{
     
@@ -39,4 +46,40 @@
 
 .cancelbtn:hover{
     color:var(--text-primary); 
+}
+
+.crypto {
+        font-size: 0.2rem; /* Adjust font size for mobile */
+        margin-top: 10px;
+    }
+.title h2{
+    font-size: 1.7rem;
+}
+
+
+/* --- Mobile Responsiveness --- */
+@media (max-width: 600px) {
+    .message svg {
+        width: 56px; /* Slightly smaller icon for mobile */
+        height: 56px;
+    }
+
+    .message p {
+        font-size: 0.63rem; /* Slightly smaller text to prevent wrapping issues */
+        line-height: 1.4;
+        padding: 0 10px;
+    }
+
+    .cancelbtn {
+        font-size: 1.2rem; 
+        padding: 12px;    
+    }
+    
+    .message {
+        gap: 8px; /* Add space between icon and text */
+    }
+    .message h3{
+        font-size: 1rem;
+    }
+    
 }
