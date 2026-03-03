@@ -48,6 +48,8 @@ function ExploreMarket({ jobs =[] }) {
 }, [jobs]);
 
   function formatTime(ms) {
+    if (ms <= 0) return "Deadline passed";
+
     const totalSeconds = Math.floor(ms / 1000);
     const hrs = Math.floor(totalSeconds / 3600);
     const mins = Math.floor((totalSeconds % 3600) / 60);
@@ -104,10 +106,12 @@ function ExploreMarket({ jobs =[] }) {
            <span><FontAwesomeIcon icon={faCircleUser} size="lg" style={{color: "var(--Emyr-bg-txt)"}} />Employer: {job.employerAddress?.slice(0, 6)}...</span>
            </div>
             <div className="deadline">
-            <span>Deadline</span>
-            <span className="deadline-time">{timers[job.id] !== undefined
-                    ? formatTime(timers[job.id])
-                    : "N/A"}</span>
+            <span className="deadline-time">Deadline</span>
+            <span className={`deadline-time ${timers[job.id] <= 0 ? 'expired' : ''}`}>
+            {timers[job.id] !== undefined 
+            ? formatTime(timers[job.id]) 
+          : "N/A"}
+           </span>
             </div>
          </div>
     </div>
