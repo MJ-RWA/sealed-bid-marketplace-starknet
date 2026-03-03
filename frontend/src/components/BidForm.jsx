@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, useLocation, Link, Outlet } from "react-router-dom";
+import { Navigate, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
 import React from "react";
 import ProposalForm from "./ProposalForm";
 import "./BidForm.css";
@@ -11,8 +11,8 @@ const [bidAmount, setBidAmount] = useState("");
  const [timeframe, setTimeframe] = useState("");
  const [commitSuccess, setCommitSuccess] = useState(false);
  const [proposal, setProposal] = useState("");
-  
-
+ const isOwner = address?.toLowerCase() === job?.employerAddress?.toLowerCase();
+ const hasBid = job.bids.some(b => b.bidder === address);
 
  function handleCommit(e) {
     e.preventDefault();
@@ -104,6 +104,39 @@ const [bidAmount, setBidAmount] = useState("");
 //   }
 // }
 
+// Replace your current if (hasBid) block with this:
+if (hasBid) {
+  return (
+    <div className="success-container">
+       <h3>Bid Already Submitted</h3>
+        <p>Please wait for the reveal phase.</p>
+       {/* Use a Link here instead of Navigate to avoid the loop */}
+       <Link to={`/jobs/${job.id}/commit-message`} className="view-link">
+         View on StarkScan
+       </Link>
+    </div>
+  );
+}
+
+  if (isOwner) {
+    return (
+      <div className="owner-view">
+        <div className="modal-header">
+          
+  
+        </div>
+        <div style={{ padding: "20px", textAlign: "center" }}>
+          <p>You created this job. You can view bids once the reveal phase begins.</p>
+        </div>
+         <div className="manage">
+          <h2>Manage Your Job</h2>
+         </div>
+      </div>
+    );
+  }
+   
+  
+  
   return (
     <div>
      
@@ -125,7 +158,7 @@ const [bidAmount, setBidAmount] = useState("");
     <div className="input-wrap"> 
       <label className="label1">PRICE (STRK)</label>
       <input 
-        type="text" 
+        type="number" 
         className="bid-input" 
         placeholder="Enter your bid amount" 
         value={bidAmount} 
@@ -135,9 +168,9 @@ const [bidAmount, setBidAmount] = useState("");
     </div>
 
     <div className="input-wrap">
-      <label className="label1">TIMEFRAME (Week/Days)</label>
+      <label className="label1">TIMEFRAME (Weeks)</label>
       <input 
-        type="text" 
+        type="number" 
         className="bid-input" 
         required 
         value={timeframe}
@@ -154,7 +187,7 @@ const [bidAmount, setBidAmount] = useState("");
         <br />
         <div class="submit">
         <Link to="commit-message"></Link>
-        <button class="submit1"type="submit">Seal & commit to starknet</button>
+        <button class="submit1"type="submit">Seal & commit to contract</button>
         
         </div>
           <span class="span1">Warning: Your bid cannot be changed once commited. The Hash ensures fairness</span>

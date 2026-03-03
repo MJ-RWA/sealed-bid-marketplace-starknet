@@ -93,36 +93,29 @@ const background = location.state?.background;
 
   if (!job) return <p>Job not found</p>;
 
-  const handleConfirmHire = () => {
+  // Inside Hire.js
+const handleConfirmHire = () => {
+  if (job.winner) {
+    alert("Job Already Awarded!");
+    return;
+  }
 
-    // 🔥 Prevent double winner
-    if (job.winner) {
-      alert("Job Already Awarded!");
-      return;
-    }
+  setJobs(prev =>
+    prev.map(j => {
+      if (j.id === Number(jobId)) {
+        return {
+          ...j,
+          winner: bidder.toLowerCase(), 
+          status: "COMPLETED"
+        };
+      }
+      return j;
+    })
+  );
 
-    setJobs(prev =>
-  prev.map(j => {
-    if (!j) return j;
-
-    if (j.id === Number(jobId)) {
-      return {
-        ...j,
-        winner: bidder,
-        status: "COMPLETED"
-      };
-    }
-
-    return j;
-  })
-);
-
-  
-
-    alert("Job successfully Awarded!");
-
-    navigate("/myprojects");
-  };
+  alert("Job successfully Awarded!");
+  navigate("/myprojects");
+};
 
   function closeModal() {
   if (background) {

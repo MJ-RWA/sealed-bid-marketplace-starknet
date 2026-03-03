@@ -55,3 +55,68 @@
     flex-direction: row;
     justify-content: right;
 }
+
+.revealed-data{
+    margin-top: 10px;
+    padding: 9px;
+    background: var(--hire-bg);
+    border-radius: 8px;
+}
+
+/* Container styling */
+.status-card {
+    max-width: 350px;
+    padding: 2rem;
+    border-radius: 16px;
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+  
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e0e0e0;
+    position: relative;
+    transition: transform 0.3s ease;
+}
+
+.status-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Success-specific styling */
+.status-card.success {
+    border-top: 6px solid #2ecc71;
+    background: var(--hire-bg);
+}
+
+/* Badge styling */
+.badge {
+    display: inline-block;
+    background: #2ecc71;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 12px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    margin-bottom: 1rem;
+    box-shadow: 0 4px 10px rgba(46, 204, 113, 0.3);
+}
+
+.status-card h3 {
+    margin: 0.5rem 0;
+    font-size: 1.5rem;
+}
+
+.status-card p {
+    color: #666;
+    font-size: 1rem;
+    line-height: 1.5;
+    margin: 0;
+}
+
+.neutral{
+    background: var(--hire-bg);
+}
+
+.owner{
+    background: var(--hire-bg);
+}

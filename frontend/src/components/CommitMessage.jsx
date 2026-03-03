@@ -34,8 +34,7 @@ function closeModal() {
                  <button class="cancelbtn" onClick={closeModal}>✕</button>
             </div>
             <div class="title">
-            <h2>{job.title}</h2>
-             <span>{job.description}</span>
+            <h2 style={{ marginBottom: '10px' }}>{job.title}</h2>
             </div>
 
            <hr />
@@ -44,8 +43,10 @@ function closeModal() {
               icon= {faCircleCheck} 
               style={{color: "#16d022",}}
               size="5x" />
+              
                 <h3>Bid commit successful</h3>
-                <p>Your bid has been cryptographically committed.</p>
+                <p className="crypto">Your bid has been cryptographically committed.</p>
+             
            </div>
            </div>
            </div>
