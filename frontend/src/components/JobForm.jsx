@@ -3,14 +3,14 @@ import { useState } from "react";
 import React from "react";
 import Modal from "../components/Modal";
 import LogicSlider from "./LogicSlider";
-import { Contract, RpcProvider } from "starknet";
-import ABI from "../abi.json"; // Make sure this file exists in src/
+import { Contract } from "starknet";
+import ABI from "../abi.json";
 import "./JobForm.css";
 
 const CONTRACT_ADDRESS = "0x07d4764a30d3eb83c00730c059b71b796692f292e94fc6eb2c20dea4da2b10ae";
 const API_URL = "https://fairlance.onrender.com/api/jobs/";
 
-function JobForm({ setJobs, address }) {
+function JobForm({ setJobs, address, jobs }) {
   const navigate = useNavigate();
 
   const [title, setTitle] = useState("");
@@ -33,27 +33,28 @@ function JobForm({ setJobs, address }) {
     try {
       const price_weight = selectionWeight;
       const timeline_weight = 100 - selectionWeight;
+      const userAddress = window.starknet.selectedAddress;
 
-      // STEP 1: SAVE TO DJANGO BACKEND
-      console.log("Saving metadata to Django...");
+      // STEP 1: SAVE TO BACKEND
+      const backendData = {
+        title,
+        description,
+        employer_address: userAddress,
+        price_weight,
+        timeline_weight,
+        status: "BIDDING"
+      };
+
       const backendResponse = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          employer_address: window.starknet.selectedAddress,
-          price_weight,
-          timeline_weight,
-          status: "BIDDING"
-        }),
+        body: JSON.stringify(backendData),
       });
 
       if (!backendResponse.ok) throw new Error("Backend save failed");
-      const savedJob = await backendResponse.json();
+      const savedResponse = await backendResponse.json();
 
-      // STEP 2: TRIGGER STARKNET TRANSACTION
-      console.log("Triggering Starknet Transaction...");
+      // STEP 2: TRIGGER STARKNET
       const account = window.starknet.account; 
       const marketplaceContract = new Contract(ABI, CONTRACT_ADDRESS, account);
 
@@ -62,11 +63,20 @@ function JobForm({ setJobs, address }) {
         timeline_weight
       );
 
-      alert("Job Published Successfully!\nTransaction Hash: " + transaction_hash);
+      // FIX: Construct a real Job object to add to the state (avoiding t.filter crash)
+      const newJobEntry = {
+        ...backendData,
+        id: savedResponse.db_id || savedResponse.id || Date.now(),
+        onchain_id: null, // Will be filled by indexer
+        created_at: new Date().toISOString(),
+        bid_count: 0
+      };
 
       if (setJobs) {
-        setJobs((prev) => [...prev, savedJob]);
+        setJobs((prev) => Array.isArray(prev) ? [...prev, newJobEntry] : [newJobEntry]);
       }
+
+      alert("Job Published Successfully!\nHash: " + transaction_hash);
       navigate(-1);
     } catch (error) {
       console.error("ACTUAL ERROR:", error);
@@ -89,55 +99,21 @@ function JobForm({ setJobs, address }) {
               <h1 className="projh">Create Job Offer</h1>
               <br />
               <label className="label2">PROJECT TITLE</label>
-              <div>
-                <input 
-                  className="jobinput" 
-                  placeholder="Job title" 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required 
-                />
-              </div>
+              <input className="jobinput" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} required />
               <br />
               <label className="label2">DETAILED DESCRIPTION</label>
-              <div className="text">
-                <textarea 
-                  className="textplace" 
-                  placeholder="What needs to be built? Be specific..." 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required 
-                />
-              </div>
+              <textarea className="textplace" placeholder="What needs to be built?" value={description} onChange={(e) => setDescription(e.target.value)} required />
               <br />
               <div className="share">
                 <div className="input-group">
                   <label className="label2">BUDGET RANGE</label>
-                  <input 
-                    type="text" 
-                    className="budget-input"
-                    placeholder="e.g. 1000-2000 STRK"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    required 
-                  />
+                  <input type="text" className="budget-input" placeholder="e.g. 1000 STRK" value={budget} onChange={(e) => setBudget(e.target.value)} required />
                 </div>
                 <div className="input-group">
                   <label className="label2">BIDDING WINDOW</label>
                   <div className="window-controls">
-                    <input
-                      name="duration" 
-                      type="number" 
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="window-num" 
-                    />
-                    <select 
-                      name="unit" 
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      className="select1"
-                    >
+                    <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="window-num" />
+                    <select value={unit} onChange={(e) => setUnit(e.target.value)} className="select1">
                       <option value="minutes">Minutes</option>
                       <option value="days">Days</option>
                     </select>
@@ -146,9 +122,6 @@ function JobForm({ setJobs, address }) {
               </div>
               <br />
               <LogicSlider value={selectionWeight} onChange={setSelectionWeight} />
-              <div className="notice">
-                N/B: Before publishing a job, use the slider to decide what matters more to you — lower price or faster delivery time. The system will automatically rank and shortlist bids based on the priority you set.
-              </div>
               <div className="btns">
                 <button type="button" className="btn" onClick={() => navigate(-1)}>Cancel</button> 
                 <button className="btn2" type="submit" disabled={loading}>
@@ -164,6 +137,6 @@ function JobForm({ setJobs, address }) {
 }
 
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "15px" };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "clamp(15px, 5vw, 30px)", borderRadius: "12px", width: "100%", maxWidth: "500px", maxHeight: "95vh", overflowY: "auto", position: "relative" };
+const modalStyle = { background: "var(--Navbar-bg)", padding: "30px", borderRadius: "12px", width: "100%", maxWidth: "500px", position: "relative" };
 
 export default JobForm;

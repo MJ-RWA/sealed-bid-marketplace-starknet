@@ -28,18 +28,22 @@ function App() {
   const [pendingRole, setPendingRole] = useState(null);
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
+  
+  // FIX: Added extra safety check to ensure jobs is ALWAYS an array
   const [jobs, setJobs] = useState(() => {
-    const stored = localStorage.getItem("jobs");
-    return stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem("jobs");
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
   });
 
   useEffect(() => {
     localStorage.setItem("jobs", JSON.stringify(jobs));
-    if (role) {
-      localStorage.setItem("userRole", role);
-    } else {
-      localStorage.removeItem("userRole");
-    }
+    if (role) localStorage.setItem("userRole", role);
+    else localStorage.removeItem("userRole");
   }, [jobs, role]);
 
   const handleRoleSelection = (selectedRole) => {
@@ -47,30 +51,25 @@ function App() {
   };
 
   const connect = async () => {
-    // FIX: If we are already logged in (Navbar), use the existing role.
-    // If we are in the Login Modal, use the pendingRole.
     const activeRole = pendingRole || role;
-
-    if (!activeRole) {
-      return alert("Please select a role first!");
-    }
+    if (!activeRole) return alert("Please select a role first!");
 
     setIsLoading(true);
     try {
       const starknet = await starknetConnect();
       if (!starknet) return;
       
+      // FIX: Close the Login Modal immediately by setting the role
+      setRole(activeRole); 
+      localStorage.setItem("userRole", activeRole);
+
       await starknet.enable();
 
       if (starknet.isConnected) {
         const userAddress = starknet.selectedAddress;
         setAddress(userAddress);
-        setRole(activeRole); // Set the role to whichever one was active
-
         localStorage.setItem("walletAddress", userAddress);
-        localStorage.setItem("userRole", activeRole);
 
-        // Only navigate if we are currently on the login/landing path
         if (location.pathname === "/" || location.pathname === "/login") {
             navigate("/ExploreMarket");
         }
@@ -92,9 +91,7 @@ function App() {
     navigate("/");
   };
 
-  const switchAccount = async () => {
-    await connect();
-  };
+  const switchAccount = async () => { await connect(); };
 
   function JobDetailWrapper({ jobs, setJobs, address }) {
     const handleReveal = (updatedJob) => {
@@ -109,14 +106,8 @@ function App() {
       <Routes location={background || location}>
         {!role ? (
           <>
-            <Route 
-              path="/" 
-              element={<LandingPage onGetStarted={() => navigate("/login", { state: { background: location } })} />} 
-            />
-            <Route 
-              path="/login" 
-              element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} 
-            />
+            <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login", { state: { background: location } })} />} />
+            <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
@@ -130,7 +121,7 @@ function App() {
             </Route>
             <Route path="/review/:jobId" element={<Review jobs={jobs} />} />
             <Route path="employer-review" element={<EmployerReview />} />
-            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs}/>} />
+            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
             <Route path="MyBids" element={<MyBids jobs={jobs} address={address} role={role} />} />
             <Route path="MyBids/jobDetail" element={<BidJobDetail jobs={jobs} address={address} role={role} />} />
             <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
@@ -144,7 +135,7 @@ function App() {
         <Routes>
           <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate(-1)} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading}/>} />
           <Route path="/jobs/:id" element={<JobDetailWrapper jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
-          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} />} />
+          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs} />} />
           <Route path="/review/:jobId" element={<Review jobs={jobs} setJobs={setJobs} address={address} />} />
           <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs}/>} />
         </Routes>
