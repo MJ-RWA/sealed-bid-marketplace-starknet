@@ -35,8 +35,11 @@ function App() {
 
   useEffect(() => {
     localStorage.setItem("jobs", JSON.stringify(jobs));
-    if (role) localStorage.setItem("userRole", role);
-    else localStorage.removeItem("userRole");
+    if (role) {
+      localStorage.setItem("userRole", role);
+    } else {
+      localStorage.removeItem("userRole");
+    }
   }, [jobs, role]);
 
   const handleRoleSelection = (selectedRole) => {
@@ -44,13 +47,16 @@ function App() {
   };
 
   const connect = async () => {
-    if (!pendingRole) {
+    // FIX: If we are already logged in (Navbar), use the existing role.
+    // If we are in the Login Modal, use the pendingRole.
+    const activeRole = pendingRole || role;
+
+    if (!activeRole) {
       return alert("Please select a role first!");
     }
 
     setIsLoading(true);
     try {
-      // Real Starknet Connection
       const starknet = await starknetConnect();
       if (!starknet) return;
       
@@ -59,12 +65,15 @@ function App() {
       if (starknet.isConnected) {
         const userAddress = starknet.selectedAddress;
         setAddress(userAddress);
-        setRole(pendingRole);
+        setRole(activeRole); // Set the role to whichever one was active
 
         localStorage.setItem("walletAddress", userAddress);
-        localStorage.setItem("userRole", pendingRole);
+        localStorage.setItem("userRole", activeRole);
 
-        navigate("/ExploreMarket");
+        // Only navigate if we are currently on the login/landing path
+        if (location.pathname === "/" || location.pathname === "/login") {
+            navigate("/ExploreMarket");
+        }
       }
     } catch (error) {
       console.error("Connection failed:", error);
@@ -84,7 +93,6 @@ function App() {
   };
 
   const switchAccount = async () => {
-    // Re-trigger the wallet selection modal
     await connect();
   };
 
