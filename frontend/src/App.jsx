@@ -29,22 +29,24 @@ function App() {
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
   
-  // FIX: Added extra safety check to ensure jobs is ALWAYS an array
-  const [jobs, setJobs] = useState(() => {
-    try {
-      const stored = localStorage.getItem("jobs");
-      const parsed = stored ? JSON.parse(stored) : [];
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (e) {
-      return [];
-    }
-  });
+  // CRITICAL FIX: Ensure jobs is ALWAYS an array to prevent .filter crash
+  const [jobs, setJobs] = useState([]);
+
+  // 1. Fetch real jobs from Backend on Load
+  useEffect(() => {
+    fetch("https://fairlance.onrender.com/api/jobs/")
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setJobs(data);
+        else setJobs([]);
+      })
+      .catch(err => console.error("Initial fetch failed:", err));
+  }, []);
 
   useEffect(() => {
-    localStorage.setItem("jobs", JSON.stringify(jobs));
     if (role) localStorage.setItem("userRole", role);
-    else localStorage.removeItem("userRole");
-  }, [jobs, role]);
+    if (address) localStorage.setItem("walletAddress", address);
+  }, [role, address]);
 
   const handleRoleSelection = (selectedRole) => {
     setPendingRole(selectedRole);
@@ -57,26 +59,25 @@ function App() {
     setIsLoading(true);
     try {
       const starknet = await starknetConnect();
-      if (!starknet) return;
+      if (!starknet) {
+        setIsLoading(false);
+        return;
+      }
       
-      // FIX: Close the Login Modal immediately by setting the role
+      // FIX: Set role immediately so the Modal closes before the wallet popup appears
       setRole(activeRole); 
-      localStorage.setItem("userRole", activeRole);
-
+      
       await starknet.enable();
 
       if (starknet.isConnected) {
-        const userAddress = starknet.selectedAddress;
-        setAddress(userAddress);
-        localStorage.setItem("walletAddress", userAddress);
-
+        setAddress(starknet.selectedAddress);
         if (location.pathname === "/" || location.pathname === "/login") {
             navigate("/ExploreMarket");
         }
       }
     } catch (error) {
       console.error("Connection failed:", error);
-      alert("Failed to connect wallet.");
+      setRole(null); // Re-open modal if failed
     } finally {
       setIsLoading(false);
     }
@@ -86,60 +87,32 @@ function App() {
     await starknetDisconnect();
     setAddress(null);
     setRole(null);
-    localStorage.removeItem("walletAddress");
-    localStorage.removeItem("userRole");
+    localStorage.clear();
     navigate("/");
   };
 
   const switchAccount = async () => { await connect(); };
-
-  function JobDetailWrapper({ jobs, setJobs, address }) {
-    const handleReveal = (updatedJob) => {
-      const newJobs = jobs.map(j => (j.id === updatedJob.id ? updatedJob : j));
-      setJobs(newJobs);
-    };
-    return <JobDetail jobs={jobs} setJobs={setJobs} address={address} onSubmitReveal={handleReveal} />;
-  }
 
   return (
     <>
       <Routes location={background || location}>
         {!role ? (
           <>
-            <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login", { state: { background: location } })} />} />
+            <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login")} />} />
             <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
           <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={switchAccount} disconnect={disconnect} role={role} setRole={setRole} />}>
-            <Route index element={<ExploreMarket jobs={jobs} />} />
-            <Route path="ExploreMarket" element={<ExploreMarket jobs={jobs} />} />
-            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
-            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />
-            <Route path="jobs/:id" element={<JobDetailWrapper jobs={jobs} setJobs={setJobs} address={address} />}>
-              <Route path="commit-message" element={<CommitMessage jobs={jobs} setJobs={setJobs} address={address}/>} />
-            </Route>
-            <Route path="/review/:jobId" element={<Review jobs={jobs} />} />
-            <Route path="employer-review" element={<EmployerReview />} />
+            <Route index element={<ExploreMarket jobs={Array.isArray(jobs) ? jobs : []} />} />
+            <Route path="ExploreMarket" element={<ExploreMarket jobs={Array.isArray(jobs) ? jobs : []} />} />
             <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
-            <Route path="MyBids" element={<MyBids jobs={jobs} address={address} role={role} />} />
-            <Route path="MyBids/jobDetail" element={<BidJobDetail jobs={jobs} address={address} role={role} />} />
+            <Route path="Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
+            <Route path="MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />
+            <Route path="jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} />} />
             <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
-            <Route path="Bidform" element={<BidForm />} />
-            <Route path="login" element={<Navigate to="/ExploreMarket" replace />} />
           </Route>
         )}
       </Routes>
-
-      {background && (
-        <Routes>
-          <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate(-1)} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading}/>} />
-          <Route path="/jobs/:id" element={<JobDetailWrapper jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
-          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs} />} />
-          <Route path="/review/:jobId" element={<Review jobs={jobs} setJobs={setJobs} address={address} />} />
-          <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs}/>} />
-        </Routes>
-      )}
     </>
   );
 }
