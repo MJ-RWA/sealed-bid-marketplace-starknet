@@ -29,24 +29,18 @@ function App() {
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
   
-  // CRITICAL FIX: Ensure jobs is ALWAYS an array to prevent .filter crash
+  // Always ensure jobs is an array
   const [jobs, setJobs] = useState([]);
 
-  // 1. Fetch real jobs from Backend on Load
+  // Fetch initial data
   useEffect(() => {
     fetch("https://fairlance.onrender.com/api/jobs/")
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setJobs(data);
-        else setJobs([]);
       })
-      .catch(err => console.error("Initial fetch failed:", err));
+      .catch(err => console.error("Fetch error:", err));
   }, []);
-
-  useEffect(() => {
-    if (role) localStorage.setItem("userRole", role);
-    if (address) localStorage.setItem("walletAddress", address);
-  }, [role, address]);
 
   const handleRoleSelection = (selectedRole) => {
     setPendingRole(selectedRole);
@@ -56,7 +50,11 @@ function App() {
     const activeRole = pendingRole || role;
     if (!activeRole) return alert("Please select a role first!");
 
+    // UI FIX: Set the role and loading immediately to close the Login Modal
     setIsLoading(true);
+    setRole(activeRole); 
+    localStorage.setItem("userRole", activeRole);
+
     try {
       const starknet = await starknetConnect();
       if (!starknet) {
@@ -64,20 +62,20 @@ function App() {
         return;
       }
       
-      // FIX: Set role immediately so the Modal closes before the wallet popup appears
-      setRole(activeRole); 
-      
       await starknet.enable();
 
       if (starknet.isConnected) {
-        setAddress(starknet.selectedAddress);
+        const userAddress = starknet.selectedAddress;
+        setAddress(userAddress);
+        localStorage.setItem("walletAddress", userAddress);
+
         if (location.pathname === "/" || location.pathname === "/login") {
             navigate("/ExploreMarket");
         }
       }
     } catch (error) {
       console.error("Connection failed:", error);
-      setRole(null); // Re-open modal if failed
+      setIsLoading(false);
     } finally {
       setIsLoading(false);
     }
@@ -103,8 +101,8 @@ function App() {
           </>
         ) : (
           <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={switchAccount} disconnect={disconnect} role={role} setRole={setRole} />}>
-            <Route index element={<ExploreMarket jobs={Array.isArray(jobs) ? jobs : []} />} />
-            <Route path="ExploreMarket" element={<ExploreMarket jobs={Array.isArray(jobs) ? jobs : []} />} />
+            <Route index element={<ExploreMarket jobs={jobs} />} />
+            <Route path="ExploreMarket" element={<ExploreMarket jobs={jobs} />} />
             <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
             <Route path="Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
             <Route path="MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />

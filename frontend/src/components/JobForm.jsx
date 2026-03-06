@@ -12,6 +12,7 @@ const API_URL = "https://fairlance.onrender.com/api/jobs/";
 
 function JobForm({ setJobs, address, jobs }) {
   const navigate = useNavigate();
+
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
@@ -22,52 +23,75 @@ function JobForm({ setJobs, address, jobs }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!window.starknet?.isConnected) return alert("Please connect wallet");
+
+    if (!window.starknet || !window.starknet.isConnected) {
+      alert("Please connect your wallet first!");
+      return;
+    }
 
     setLoading(true);
     try {
       const price_weight = selectionWeight;
       const timeline_weight = 100 - selectionWeight;
+      const userAddress = window.starknet.selectedAddress;
 
-      // 1. Save to Django
-      const res = await fetch(API_URL, {
+      // --- STEP 1: BLOCKCHAIN FIRST ---
+      console.log("Triggering Starknet Transaction...");
+      const account = window.starknet.account; 
+      const marketplaceContract = new Contract(ABI, CONTRACT_ADDRESS, account);
+
+      // This will open the wallet popup. If the user cancels, it throws an error here.
+      const { transaction_hash } = await marketplaceContract.create_job(
+        price_weight,
+        timeline_weight
+      );
+
+      console.log("Blockchain Transaction Sent! Hash:", transaction_hash);
+
+      // --- STEP 2: SAVE TO BACKEND ONLY ON SUCCESSFUL SIGNATURE ---
+      console.log("Saving metadata to Django...");
+      const backendResponse = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           title,
           description,
-          employer_address: window.starknet.selectedAddress,
+          employer_address: userAddress,
           price_weight,
           timeline_weight,
           status: "BIDDING"
         }),
       });
 
-      if (!res.ok) throw new Error("Backend save failed");
-      const savedJob = await res.json();
+      if (!backendResponse.ok) {
+          console.warn("Blockchain succeeded but Backend failed to save metadata.");
+      }
+      
+      const savedJob = await backendResponse.json();
 
-      // 2. Starknet
-      const account = window.starknet.account; 
-      const contract = new Contract(ABI, CONTRACT_ADDRESS, account);
-      const { transaction_hash } = await contract.create_job(price_weight, timeline_weight);
-
-      // 3. Update State Safely
+      // Update state safely with the Lead's design objects
       if (setJobs) {
-        // We create a clean object that matches the Lead's expected structure
-        const cleanJob = { 
-            ...savedJob, 
-            id: savedJob.id || Date.now(), 
-            title, 
+        const newJobEntry = {
+            ...savedJob,
+            title,
             description,
-            onchain_id: null 
+            onchain_id: null, // Indexer will fill this
+            bid_count: 0
         };
-        setJobs(prev => Array.isArray(prev) ? [...prev, cleanJob] : [cleanJob]);
+        setJobs((prev) => Array.isArray(prev) ? [...prev, newJobEntry] : [newJobEntry]);
       }
 
-      alert("Success! Transaction Hash: " + transaction_hash);
-      navigate("/ExploreMarket");
+      alert("Job Published Successfully!\nTransaction Hash: " + transaction_hash);
+      navigate(-1);
+
     } catch (error) {
-      alert("Error: " + error.message);
+      console.error("Process cancelled or failed:", error);
+      // If user cancels the wallet, we just stop loading and stay on the page.
+      if (error.message.includes("User abort")) {
+          alert("Transaction cancelled by user.");
+      } else {
+          alert("Error: " + error.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -77,35 +101,87 @@ function JobForm({ setJobs, address, jobs }) {
     <Modal>
       <div style={overlayStyle}>
         <div style={modalStyle}>
-          <div className="cancelbtn"><button type="button" onClick={() => navigate(-1)}>✕</button></div> 
+          <div className="cancelbtn">
+            <button type="button" onClick={() => navigate(-1)}>✕</button>
+          </div> 
+
           <form onSubmit={handleSubmit}>
             <div className="job">
               <h1 className="projh">Create Job Offer</h1>
+
+              <br />
               <label className="label2">PROJECT TITLE</label>
-              <input className="jobinput" value={title} onChange={(e) => setTitle(e.target.value)} required />
+              <div>
+                <input 
+                  className="jobinput" 
+                  placeholder="Job title" 
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  required 
+                />
+              </div>
+
+              <br />
               <label className="label2">DETAILED DESCRIPTION</label>
-              <textarea className="textplace" value={description} onChange={(e) => setDescription(e.target.value)} required />
+              <div className="text">
+                <textarea 
+                  className="textplace" 
+                  placeholder="What needs to be built? Be specific..." 
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  required 
+                />
+              </div>
+
+              <br />
               <div className="share">
                 <div className="input-group">
                   <label className="label2">BUDGET RANGE</label>
-                  <input type="text" className="budget-input" value={budget} onChange={(e) => setBudget(e.target.value)} required />
+                  <input 
+                    type="text" 
+                    className="budget-input"
+                    placeholder="e.g. 1000-2000 STRK"
+                    value={budget}
+                    onChange={(e) => setBudget(e.target.value)}
+                    required 
+                  />
                 </div>
+
                 <div className="input-group">
                   <label className="label2">BIDDING WINDOW</label>
                   <div className="window-controls">
-                    <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="window-num" />
-                    <select value={unit} onChange={(e) => setUnit(e.target.value)} className="select1">
+                    <input
+                      name="duration" 
+                      type="number" 
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      className="window-num" 
+                    />
+                    <select 
+                      name="unit" 
+                      value={unit}
+                      onChange={(e) => setUnit(e.target.value)}
+                      className="select1"
+                    >
                       <option value="minutes">Minutes</option>
                       <option value="days">Days</option>
                     </select>
                   </div>
                 </div>
               </div>
+
               <br />
               <LogicSlider value={selectionWeight} onChange={setSelectionWeight} />
+
+              <div className="notice">
+                N/B: Before publishing a job, use the slider to decide what matters more to you — lower price or faster delivery time. The system will automatically rank and shortlist bids based on the priority you set.
+              </div>
+
               <div className="btns">
-                <button type="button" className="btn" onClick={() => navigate(-1)}>Cancel</button> 
-                <button className="btn2" type="submit" disabled={loading}>{loading ? "Authorizing..." : "Create Job"}</button>
+                <button className="btn" type="button" onClick={() => navigate(-1)}>Cancel</button> 
+                <button className="btn2" type="submit" disabled={loading}>
+                  {loading ? "Authorizing..." : "Create Job"}
+                </button>
               </div>
             </div>
           </form>
@@ -116,6 +192,6 @@ function JobForm({ setJobs, address, jobs }) {
 }
 
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "15px" };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "30px", borderRadius: "12px", width: "100%", maxWidth: "500px", position: "relative" };
+const modalStyle = { background: "var(--Navbar-bg)", padding: "clamp(15px, 5vw, 30px)", borderRadius: "12px", width: "100%", maxWidth: "500px", maxHeight: "95vh", overflowY: "auto", position: "relative" };
 
 export default JobForm;
