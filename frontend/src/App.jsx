@@ -29,60 +29,34 @@ function App() {
   const [pendingRole, setPendingRole] = useState(null);
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
-  
-  // State is always an empty array to start
   const [jobs, setJobs] = useState([]);
 
-  // FETCH DATA WITH PAGINATION CHECK
   useEffect(() => {
     fetch("https://fairlance.onrender.com/api/jobs/")
       .then(res => res.json())
       .then(data => {
-        // ACTUAL FIX: Check if data is paginated {results: []} or raw array []
-        if (Array.isArray(data)) {
-            setJobs(data);
-        } else if (data && Array.isArray(data.results)) {
-            setJobs(data.results);
-        } else {
-            setJobs([]);
-        }
+        const results = Array.isArray(data) ? data : (data.results || []);
+        setJobs(results);
       })
-      .catch(err => {
-          console.error("API Fetch Failed:", err);
-          setJobs([]);
-      });
+      .catch(() => setJobs([]));
   }, []);
-
-  useEffect(() => {
-    if (role) localStorage.setItem("userRole", role);
-    if (address) localStorage.setItem("walletAddress", address);
-  }, [role, address]);
 
   const connect = async () => {
     const activeRole = pendingRole || role;
     if (!activeRole) return alert("Please select a role first!");
     setRole(activeRole);
     setIsLoading(true);
-
     try {
       const starknet = await starknetConnect();
-      if (!starknet) {
-        setIsLoading(false);
-        return;
-      }
+      if (!starknet) { setIsLoading(false); return; }
       await starknet.enable();
       if (starknet.isConnected) {
         setAddress(starknet.selectedAddress);
-        if (location.pathname === "/" || location.pathname === "/login") {
-            navigate("/ExploreMarket");
-        }
+        localStorage.setItem("walletAddress", starknet.selectedAddress);
+        localStorage.setItem("userRole", activeRole);
+        if (location.pathname === "/" || location.pathname === "/login") navigate("/ExploreMarket");
       }
-    } catch (error) {
-      console.error(error);
-      setIsLoading(false);
-    } finally {
-      setIsLoading(false);
-    }
+    } catch (e) { setIsLoading(false); }
   };
 
   const disconnect = async () => {
@@ -93,29 +67,36 @@ function App() {
     navigate("/");
   };
 
-  // Helper to ensure components NEVER receive anything but an array
-  const safeJobs = Array.isArray(jobs) ? jobs : [];
-
   return (
     <>
       <Routes location={background || location}>
         {!role ? (
           <>
             <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login")} />} />
-            <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={setPendingRole} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} />
+            <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={setPendingRole} pendingRole={pendingRole} onConnect={connect} loading={isLoading} />} />
           </>
         ) : (
           <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={connect} disconnect={disconnect} role={role} setRole={setRole} />}>
-            <Route index element={<ExploreMarket jobs={safeJobs} />} />
-            <Route path="ExploreMarket" element={<ExploreMarket jobs={safeJobs} />} />
-            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={safeJobs}/>} />
-            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={safeJobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
-            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={safeJobs} address={address} /></ProtectedRoute>} />
-            <Route path="jobs/:id" element={<JobDetail jobs={safeJobs} setJobs={setJobs} address={address} />} />
-            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={safeJobs} />} />
+            <Route index element={<ExploreMarket jobs={jobs} />} />
+            <Route path="ExploreMarket" element={<ExploreMarket jobs={jobs} />} />
+            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
+            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
+            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />
+            {/* Main Job Route */}
+            <Route path="jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
+            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
           </Route>
         )}
       </Routes>
+
+      {/* THE MODAL OVERLAY SECTION - FIXED PROPS */}
+      {background && (
+        <Routes>
+          <Route path="/jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
+          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs} />} />
+          <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs}/>} />
+        </Routes>
+      )}
     </>
   );
 }
