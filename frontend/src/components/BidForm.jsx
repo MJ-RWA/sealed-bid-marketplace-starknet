@@ -13,6 +13,10 @@ const [bidAmount, setBidAmount] = useState("");
  const [proposal, setProposal] = useState("");
  const isOwner = address?.toLowerCase() === job?.employerAddress?.toLowerCase();
  const hasBid = job.bids.some(b => b.bidder === address);
+ const bidCount = job.bids?.length || 0;
+
+ 
+
 
  function handleCommit(e) {
     e.preventDefault();
@@ -150,7 +154,12 @@ if (hasBid) {
             </div>
           </div>
            
-          
+          <div className="bid-counter">
+      <span className="pulse-dot"></span> 
+      <strong>{bidCount}</strong> {bidCount === 1 ? 'Bid' : 'Bids'} Committed
+       </div>
+
+
         </div>
         <br />
       <form onSubmit={handleCommit}>

@@ -63,7 +63,7 @@ const Hero = ({ onGetStarted }) => {
           {[
             { icon: <Lock className="w-6 h-6 text-indigo-400" />, title: "Sealed Bids", desc: "Bids are cryptographically committed and hidden until the reveal phase." },
             { icon: <Shield className="w-6 h-6 text-emerald-400" />, title: "No Undercutting", desc: "Competitors cannot see your bid, preventing 'race to the bottom' tactics." },
-            { icon: <Users className="w-6 h-6 text-orange-400" />, title: "Fair Selection", desc: "Algorithmic shortlisting based on efficiency, not just the lowest price." }
+            { icon: <Users className="w-6 h-6 text-orange-400" />, title: "Fair Selection", desc: "Algorithmic shortlisting based on employer's selection criteria." }
           ].map((feature, i) => (  
             <div key={i} className="p-8 bg-slate-800/40 backdrop-blur-sm border border-slate-700/50 rounded-2xl text-left hover:border-indigo-500/50 transition-all group">  
               <div className="w-12 h-12 bg-slate-900 rounded-xl flex items-center justify-center mb-6 border border-slate-700 group-hover:scale-110 transition-transform">  

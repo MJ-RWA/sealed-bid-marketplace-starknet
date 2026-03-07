@@ -4,11 +4,15 @@ import { Link } from "react-router-dom";
 import { useNavigate, useParams, useLocation  } from "react-router-dom";
 import "./CommitMessage.css"
 
-function CommitMessage ({jobs}) {
+function CommitMessage ({jobs, address}) {
     const navigate = useNavigate();
   const { id } = useParams();
  const location = useLocation();
 const background = location.state?.background;
+
+  
+  
+
 
 function closeModal() {
   if (background) {
@@ -20,6 +24,8 @@ function closeModal() {
 
 
   const job = jobs?.find(j => j && j.id === Number(id));
+  const bidCount = job?.bids?.length || 0;
+
 
   if (!job) {
     return <p>Job not found</p>;
@@ -46,7 +52,12 @@ function closeModal() {
               
                 <h3>Bid commit successful</h3>
                 <p className="crypto">Your bid has been cryptographically committed.</p>
-             
+                {/* Add this below the submit button or inside the success container */}
+            <div className="recent-activity">
+            {bidCount > 0 && (
+            <p>Committed at {new Date(job.bids[bidCount - 1].committedAt).toLocaleTimeString()}</p>
+           )}
+            </div>
            </div>
            </div>
            </div>

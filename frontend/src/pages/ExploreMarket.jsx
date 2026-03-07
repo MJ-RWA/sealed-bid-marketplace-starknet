@@ -86,7 +86,7 @@ function ExploreMarket({ jobs =[] }) {
           className="job-card-link"
         >
 
-    <div className="job-card" style={{ padding:"20px"}}>
+    <div className={`job-card ${job.status === "COMPLETED" ? "job-completed" : ""}`} style={{ padding: "20px" }}>
         <div class="jobcarddetail">
             <span  className={state[job.status]}>{job.status}</span>
             <span class="amount">
