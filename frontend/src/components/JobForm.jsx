@@ -29,12 +29,12 @@ function JobForm({ setJobs, address, jobs }) {
       const price_weight = selectionWeight;
       const timeline_weight = 100 - selectionWeight;
 
-      // 1. Starknet FIRST
+      // 1. STARKNET TRANSACTION
       const account = window.starknet.account; 
-      const contract = new Contract(ABI, CONTRACT_ADDRESS, account);
-      const { transaction_hash } = await contract.create_job(price_weight, timeline_weight);
+      const marketplaceContract = new Contract(ABI, CONTRACT_ADDRESS, account);
+      const { transaction_hash } = await marketplaceContract.create_job(price_weight, timeline_weight);
 
-      // 2. Save to Backend only if signed
+      // 2. BACKEND SAVE
       const backendData = {
         title,
         description,
@@ -52,15 +52,23 @@ function JobForm({ setJobs, address, jobs }) {
 
       const savedJob = await res.json();
 
-      // 3. Force state to remain an array
+      // 3. UI STATE UPDATE (ENSURE ARRAY)
       if (setJobs) {
-        const newEntry = { ...savedJob, title, description, onchain_id: null };
+        const newEntry = { 
+            ...savedJob, 
+            title, 
+            description, 
+            onchain_id: null, 
+            id: savedJob.id || Date.now() 
+        };
         setJobs(prev => Array.isArray(prev) ? [...prev, newEntry] : [newEntry]);
       }
 
-      alert("Success! Hash: " + transaction_hash);
+      alert("Job Published!\nHash: " + transaction_hash);
       navigate("/ExploreMarket");
+
     } catch (error) {
+      console.error(error);
       alert("Error: " + error.message);
     } finally {
       setLoading(false);
@@ -77,11 +85,10 @@ function JobForm({ setJobs, address, jobs }) {
           <form onSubmit={handleSubmit}>
             <div className="job">
               <h1 className="projh">Create Job Offer</h1>
-
               <br />
               <label className="label2">PROJECT TITLE</label>
               <input className="jobinput" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} required />
-
+              
               <br />
               <label className="label2">DETAILED DESCRIPTION</label>
               <div className="text">

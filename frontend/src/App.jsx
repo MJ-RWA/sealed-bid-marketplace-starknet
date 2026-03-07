@@ -29,20 +29,30 @@ function App() {
   const [pendingRole, setPendingRole] = useState(null);
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
+  
+  // State is always an empty array to start
   const [jobs, setJobs] = useState([]);
 
-  // 1. Force fetch from API on load to fix any .filter issues immediately
+  // FETCH DATA WITH PAGINATION CHECK
   useEffect(() => {
     fetch("https://fairlance.onrender.com/api/jobs/")
       .then(res => res.json())
       .then(data => {
-        if (Array.isArray(data)) setJobs(data);
-        else setJobs([]);
+        // ACTUAL FIX: Check if data is paginated {results: []} or raw array []
+        if (Array.isArray(data)) {
+            setJobs(data);
+        } else if (data && Array.isArray(data.results)) {
+            setJobs(data.results);
+        } else {
+            setJobs([]);
+        }
       })
-      .catch(() => setJobs([]));
+      .catch(err => {
+          console.error("API Fetch Failed:", err);
+          setJobs([]);
+      });
   }, []);
 
-  // 2. Defensive state saving
   useEffect(() => {
     if (role) localStorage.setItem("userRole", role);
     if (address) localStorage.setItem("walletAddress", address);
@@ -51,8 +61,6 @@ function App() {
   const connect = async () => {
     const activeRole = pendingRole || role;
     if (!activeRole) return alert("Please select a role first!");
-
-    // UI FIX: Set role immediately to KILL the modal before wallet even opens
     setRole(activeRole);
     setIsLoading(true);
 
@@ -72,6 +80,8 @@ function App() {
     } catch (error) {
       console.error(error);
       setIsLoading(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -83,6 +93,7 @@ function App() {
     navigate("/");
   };
 
+  // Helper to ensure components NEVER receive anything but an array
   const safeJobs = Array.isArray(jobs) ? jobs : [];
 
   return (
