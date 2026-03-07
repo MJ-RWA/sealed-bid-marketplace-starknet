@@ -1,4 +1,4 @@
-import { poseidonHashMany } from "starknet";
+import { hash } from "starknet";
 
 /**
  * Generates a Poseidon Hash for a Sealed Bid
@@ -6,8 +6,6 @@ import { poseidonHashMany } from "starknet";
  */
 export const generateBidCommitment = (price, timeline, salt) => {
     // 1. Convert price to BigInt
-    // Note: If you use STRK decimals (18), you would multiply by 10^18 here.
-    // For now, we treat the input as a raw integer.
     const priceBigInt = BigInt(price);
     
     // 2. Split u256 into low and high 128-bit parts
@@ -23,8 +21,8 @@ export const generateBidCommitment = (price, timeline, salt) => {
         BigInt(salt)
     ];
 
-    // 4. Generate the hash
-    return poseidonHashMany(dataToHash);
+    // 4. Generate the hash using the correct Starknet v6 export
+    return hash.computePoseidonHashOnElements(dataToHash);
 };
 
 /**
