@@ -35,63 +35,53 @@ function JobForm({ setJobs, address, jobs }) {
       const timeline_weight = 100 - selectionWeight;
       const userAddress = window.starknet.selectedAddress;
 
-      // --- STEP 1: BLOCKCHAIN FIRST ---
+      // STEP 1: TRIGGER STARKNET TRANSACTION FIRST (PREVENTS GHOST BACKEND DATA)
       console.log("Triggering Starknet Transaction...");
       const account = window.starknet.account; 
       const marketplaceContract = new Contract(ABI, CONTRACT_ADDRESS, account);
 
-      // This will open the wallet popup. If the user cancels, it throws an error here.
       const { transaction_hash } = await marketplaceContract.create_job(
         price_weight,
         timeline_weight
       );
 
-      console.log("Blockchain Transaction Sent! Hash:", transaction_hash);
+      console.log("Blockchain Success. Hash:", transaction_hash);
 
-      // --- STEP 2: SAVE TO BACKEND ONLY ON SUCCESSFUL SIGNATURE ---
-      console.log("Saving metadata to Django...");
+      // STEP 2: SAVE TO BACKEND ONLY IF TRANSACTION IS SENT
+      const backendData = {
+        title,
+        description,
+        employer_address: userAddress,
+        price_weight,
+        timeline_weight,
+        status: "BIDDING"
+      };
+
       const backendResponse = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title,
-          description,
-          employer_address: userAddress,
-          price_weight,
-          timeline_weight,
-          status: "BIDDING"
-        }),
+        body: JSON.stringify(backendData),
       });
 
-      if (!backendResponse.ok) {
-          console.warn("Blockchain succeeded but Backend failed to save metadata.");
-      }
-      
       const savedJob = await backendResponse.json();
 
-      // Update state safely with the Lead's design objects
+      // THE .FILTER FIX: Ensure we only add a valid object to a clean array
       if (setJobs) {
         const newJobEntry = {
-            ...savedJob,
-            title,
-            description,
-            onchain_id: null, // Indexer will fill this
+            ...backendData,
+            id: savedJob.db_id || savedJob.id || Date.now(),
+            onchain_id: null,
             bid_count: 0
         };
         setJobs((prev) => Array.isArray(prev) ? [...prev, newJobEntry] : [newJobEntry]);
       }
 
-      alert("Job Published Successfully!\nTransaction Hash: " + transaction_hash);
-      navigate(-1);
+      alert("Job Published Successfully!\nHash: " + transaction_hash);
+      navigate("/ExploreMarket");
 
     } catch (error) {
-      console.error("Process cancelled or failed:", error);
-      // If user cancels the wallet, we just stop loading and stay on the page.
-      if (error.message.includes("User abort")) {
-          alert("Transaction cancelled by user.");
-      } else {
-          alert("Error: " + error.message);
-      }
+      console.error("Process failed:", error);
+      alert("Error: " + error.message);
     } finally {
       setLoading(false);
     }
@@ -124,6 +114,7 @@ function JobForm({ setJobs, address, jobs }) {
               <br />
               <label className="label2">DETAILED DESCRIPTION</label>
               <div className="text">
+                {/* RESTORED: Textarea now correctly uses Lead's class and placeholder */}
                 <textarea 
                   className="textplace" 
                   placeholder="What needs to be built? Be specific..." 
@@ -137,6 +128,7 @@ function JobForm({ setJobs, address, jobs }) {
               <div className="share">
                 <div className="input-group">
                   <label className="label2">BUDGET RANGE</label>
+                  {/* RESTORED: Budget placeholder and class */}
                   <input 
                     type="text" 
                     className="budget-input"
@@ -178,7 +170,7 @@ function JobForm({ setJobs, address, jobs }) {
               </div>
 
               <div className="btns">
-                <button className="btn" type="button" onClick={() => navigate(-1)}>Cancel</button> 
+                <button type="button" className="btn" onClick={() => navigate(-1)}>Cancel</button> 
                 <button className="btn2" type="submit" disabled={loading}>
                   {loading ? "Authorizing..." : "Create Job"}
                 </button>

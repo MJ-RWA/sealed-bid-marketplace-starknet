@@ -29,18 +29,32 @@ function App() {
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
   
-  // Always ensure jobs is an array
-  const [jobs, setJobs] = useState([]);
+  // THE .FILTER FIX: Force initialization to an empty array even if LocalStorage is broken
+  const [jobs, setJobs] = useState(() => {
+    try {
+      const stored = localStorage.getItem("jobs");
+      const parsed = stored ? JSON.parse(stored) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  });
 
-  // Fetch initial data
+  // Fetch real data from Backend on mount to overwrite local junk
   useEffect(() => {
     fetch("https://fairlance.onrender.com/api/jobs/")
       .then(res => res.json())
       .then(data => {
         if (Array.isArray(data)) setJobs(data);
       })
-      .catch(err => console.error("Fetch error:", err));
+      .catch(err => console.error("Initial fetch failed:", err));
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("jobs", JSON.stringify(Array.isArray(jobs) ? jobs : []));
+    if (role) localStorage.setItem("userRole", role);
+    else localStorage.removeItem("userRole");
+  }, [jobs, role]);
 
   const handleRoleSelection = (selectedRole) => {
     setPendingRole(selectedRole);
@@ -50,9 +64,9 @@ function App() {
     const activeRole = pendingRole || role;
     if (!activeRole) return alert("Please select a role first!");
 
-    // UI FIX: Set the role and loading immediately to close the Login Modal
     setIsLoading(true);
-    setRole(activeRole); 
+    // UI FIX: Close modal instantly
+    setRole(activeRole);
     localStorage.setItem("userRole", activeRole);
 
     try {
@@ -91,26 +105,56 @@ function App() {
 
   const switchAccount = async () => { await connect(); };
 
+  // Re-added the Lead's Wrapper for Job Details
+  function JobDetailWrapper({ jobs, setJobs, address }) {
+    const handleReveal = (updatedJob) => {
+      const newJobs = Array.isArray(jobs) ? jobs.map(j => (j.id === updatedJob.id ? updatedJob : j)) : [];
+      setJobs(newJobs);
+    };
+    return <JobDetail jobs={Array.isArray(jobs) ? jobs : []} setJobs={setJobs} address={address} onSubmitReveal={handleReveal} />;
+  }
+
+  // Safety helper for rendering components
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
+
   return (
     <>
       <Routes location={background || location}>
         {!role ? (
           <>
-            <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login")} />} />
+            <Route path="/" element={<LandingPage onGetStarted={() => navigate("/login", { state: { background: location } })} />} />
             <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading} />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </>
         ) : (
           <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={switchAccount} disconnect={disconnect} role={role} setRole={setRole} />}>
-            <Route index element={<ExploreMarket jobs={jobs} />} />
-            <Route path="ExploreMarket" element={<ExploreMarket jobs={jobs} />} />
-            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
-            <Route path="Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
-            <Route path="MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />
-            <Route path="jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} />} />
-            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
+            <Route index element={<ExploreMarket jobs={safeJobs} />} />
+            <Route path="ExploreMarket" element={<ExploreMarket jobs={safeJobs} />} />
+            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={safeJobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
+            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={safeJobs} address={address} /></ProtectedRoute>} />
+            <Route path="jobs/:id" element={<JobDetailWrapper jobs={safeJobs} setJobs={setJobs} address={address} />}>
+              <Route path="commit-message" element={<CommitMessage jobs={safeJobs} setJobs={setJobs} address={address}/>} />
+            </Route>
+            <Route path="/review/:jobId" element={<Review jobs={safeJobs} />} />
+            <Route path="employer-review" element={<EmployerReview />} />
+            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={safeJobs}/>} />
+            <Route path="MyBids/jobDetail" element={<BidJobDetail jobs={safeJobs} address={address} role={role} />} />
+            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={safeJobs} />} />
+            <Route path="Bidform" element={<BidForm />} />
+            <Route path="login" element={<Navigate to="/ExploreMarket" replace />} />
           </Route>
         )}
       </Routes>
+
+      {background && (
+        <Routes>
+          <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate(-1)} onSelectRole={handleRoleSelection} pendingRole={pendingRole} onConnect={connect} setPendingRole={setPendingRole} loading={isLoading}/>} />
+          <Route path="/jobs/:id" element={<JobDetailWrapper jobs={safeJobs} setJobs={setJobs} address={address} role={role} />} />
+          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={safeJobs} />} />
+          <Route path="/review/:jobId" element={<Review jobs={safeJobs} setJobs={setJobs} address={address} />} />
+          <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={safeJobs}/>} />
+        </Routes>
+      )}
     </>
   );
 }
