@@ -12,7 +12,6 @@ const API_URL = "https://fairlance.onrender.com/api/jobs/";
 
 function JobForm({ setJobs, address, jobs }) {
   const navigate = useNavigate();
-
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [budget, setBudget] = useState("");
@@ -23,64 +22,45 @@ function JobForm({ setJobs, address, jobs }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (!window.starknet || !window.starknet.isConnected) {
-      alert("Please connect your wallet first!");
-      return;
-    }
+    if (!window.starknet?.isConnected) return alert("Please connect wallet");
 
     setLoading(true);
     try {
       const price_weight = selectionWeight;
       const timeline_weight = 100 - selectionWeight;
-      const userAddress = window.starknet.selectedAddress;
 
-      // STEP 1: TRIGGER STARKNET TRANSACTION FIRST (PREVENTS GHOST BACKEND DATA)
-      console.log("Triggering Starknet Transaction...");
+      // 1. Starknet FIRST
       const account = window.starknet.account; 
-      const marketplaceContract = new Contract(ABI, CONTRACT_ADDRESS, account);
+      const contract = new Contract(ABI, CONTRACT_ADDRESS, account);
+      const { transaction_hash } = await contract.create_job(price_weight, timeline_weight);
 
-      const { transaction_hash } = await marketplaceContract.create_job(
-        price_weight,
-        timeline_weight
-      );
-
-      console.log("Blockchain Success. Hash:", transaction_hash);
-
-      // STEP 2: SAVE TO BACKEND ONLY IF TRANSACTION IS SENT
+      // 2. Save to Backend only if signed
       const backendData = {
         title,
         description,
-        employer_address: userAddress,
+        employer_address: window.starknet.selectedAddress,
         price_weight,
         timeline_weight,
         status: "BIDDING"
       };
 
-      const backendResponse = await fetch(API_URL, {
+      const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(backendData),
       });
 
-      const savedJob = await backendResponse.json();
+      const savedJob = await res.json();
 
-      // THE .FILTER FIX: Ensure we only add a valid object to a clean array
+      // 3. Force state to remain an array
       if (setJobs) {
-        const newJobEntry = {
-            ...backendData,
-            id: savedJob.db_id || savedJob.id || Date.now(),
-            onchain_id: null,
-            bid_count: 0
-        };
-        setJobs((prev) => Array.isArray(prev) ? [...prev, newJobEntry] : [newJobEntry]);
+        const newEntry = { ...savedJob, title, description, onchain_id: null };
+        setJobs(prev => Array.isArray(prev) ? [...prev, newEntry] : [newEntry]);
       }
 
-      alert("Job Published Successfully!\nHash: " + transaction_hash);
+      alert("Success! Hash: " + transaction_hash);
       navigate("/ExploreMarket");
-
     } catch (error) {
-      console.error("Process failed:", error);
       alert("Error: " + error.message);
     } finally {
       setLoading(false);
@@ -94,86 +74,42 @@ function JobForm({ setJobs, address, jobs }) {
           <div className="cancelbtn">
             <button type="button" onClick={() => navigate(-1)}>✕</button>
           </div> 
-
           <form onSubmit={handleSubmit}>
             <div className="job">
               <h1 className="projh">Create Job Offer</h1>
 
               <br />
               <label className="label2">PROJECT TITLE</label>
-              <div>
-                <input 
-                  className="jobinput" 
-                  placeholder="Job title" 
-                  value={title}
-                  onChange={(e) => setTitle(e.target.value)}
-                  required 
-                />
-              </div>
+              <input className="jobinput" placeholder="Job title" value={title} onChange={(e) => setTitle(e.target.value)} required />
 
               <br />
               <label className="label2">DETAILED DESCRIPTION</label>
               <div className="text">
-                {/* RESTORED: Textarea now correctly uses Lead's class and placeholder */}
-                <textarea 
-                  className="textplace" 
-                  placeholder="What needs to be built? Be specific..." 
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  required 
-                />
+                <textarea className="textplace" placeholder="What needs to be built? Be specific..." value={description} onChange={(e) => setDescription(e.target.value)} required />
               </div>
 
               <br />
               <div className="share">
                 <div className="input-group">
                   <label className="label2">BUDGET RANGE</label>
-                  {/* RESTORED: Budget placeholder and class */}
-                  <input 
-                    type="text" 
-                    className="budget-input"
-                    placeholder="e.g. 1000-2000 STRK"
-                    value={budget}
-                    onChange={(e) => setBudget(e.target.value)}
-                    required 
-                  />
+                  <input type="text" className="budget-input" placeholder="e.g. 1000-2000 STRK" value={budget} onChange={(e) => setBudget(e.target.value)} required />
                 </div>
-
                 <div className="input-group">
                   <label className="label2">BIDDING WINDOW</label>
                   <div className="window-controls">
-                    <input
-                      name="duration" 
-                      type="number" 
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      className="window-num" 
-                    />
-                    <select 
-                      name="unit" 
-                      value={unit}
-                      onChange={(e) => setUnit(e.target.value)}
-                      className="select1"
-                    >
+                    <input type="number" value={duration} onChange={(e) => setDuration(e.target.value)} className="window-num" />
+                    <select value={unit} onChange={(e) => setUnit(e.target.value)} className="select1">
                       <option value="minutes">Minutes</option>
                       <option value="days">Days</option>
                     </select>
                   </div>
                 </div>
               </div>
-
               <br />
               <LogicSlider value={selectionWeight} onChange={setSelectionWeight} />
-
-              <div className="notice">
-                N/B: Before publishing a job, use the slider to decide what matters more to you — lower price or faster delivery time. The system will automatically rank and shortlist bids based on the priority you set.
-              </div>
-
               <div className="btns">
                 <button type="button" className="btn" onClick={() => navigate(-1)}>Cancel</button> 
-                <button className="btn2" type="submit" disabled={loading}>
-                  {loading ? "Authorizing..." : "Create Job"}
-                </button>
+                <button className="btn2" type="submit" disabled={loading}>{loading ? "Authorizing..." : "Create Job"}</button>
               </div>
             </div>
           </form>
@@ -184,6 +120,6 @@ function JobForm({ setJobs, address, jobs }) {
 }
 
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000, padding: "15px" };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "clamp(15px, 5vw, 30px)", borderRadius: "12px", width: "100%", maxWidth: "500px", maxHeight: "95vh", overflowY: "auto", position: "relative" };
+const modalStyle = { background: "var(--Navbar-bg)", padding: "30px", borderRadius: "12px", width: "100%", maxWidth: "500px", position: "relative" };
 
 export default JobForm;
