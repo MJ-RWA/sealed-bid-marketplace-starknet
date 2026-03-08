@@ -22,25 +22,28 @@ RPC_URL = os.getenv("STARKNET_URL")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
 JOB_CREATED_SELECTOR = hex(get_selector_from_name("JobCreated"))
 
-# --- RAW RPC LOGIC (Bypasses Library Validation Bugs) ---
+# --- FIXED RAW RPC LOGIC ---
 async def fetch_events_raw(session, from_block, to_block):
     payload = {
         "jsonrpc": "2.0",
         "method": "starknet_getEvents",
-        "params": {
-            "filter": {
+        "params": [
+            {
                 "from_block": {"block_number": from_block},
                 "to_block": {"block_number": to_block},
                 "address": CONTRACT_ADDRESS,
-                "keys": [[JOB_CREATED_SELECTOR]]
+                "keys": [[JOB_CREATED_SELECTOR]],
+                "chunk_size": 100  # THE FIX: Alchemy requires this field
             }
-        },
+        ],
         "id": 1
     }
     async with session.post(RPC_URL, json=payload) as response:
         result = await response.json()
         if "error" in result:
-            raise Exception(result["error"])
+            # Print the error so we can see it in Render logs
+            print(f"DEBUG RPC ERROR: {result['error']}")
+            return []
         return result.get("result", {}).get("events", [])
 
 async def get_latest_block_raw(session):
@@ -55,17 +58,16 @@ async def get_latest_block_raw(session):
         return result["result"]
 
 async def monitor():
-    print(f"📡 INDEXER: Starting Raw JSON-RPC Scanner...")
-    print(f"📡 INDEXER: Target Contract: {CONTRACT_ADDRESS}")
+    print(f"📡 INDEXER: Connection established. Target: {CONTRACT_ADDRESS}")
     
     async with aiohttp.ClientSession() as session:
         try:
             current_b = await get_latest_block_raw(session)
-            # Catch up from the last 100 blocks to find previous tests
+            # Catch up lookback
             last_block = current_b - 100 
-            print(f"🚀 INDEXER: Connected. Catching up from block {last_block}...")
+            print(f"🚀 INDEXER: Live Scanner Active. Starting catch-up from block {last_block}...")
         except Exception as e:
-            print(f"❌ INDEXER: Initial Connection Failed: {e}")
+            print(f"❌ INDEXER: Connection Failed: {e}")
             return
 
         while True:
@@ -73,41 +75,38 @@ async def monitor():
                 current_block = await get_latest_block_raw(session)
                 
                 if current_block > last_block:
-                    print(f"🔍 INDEXER: Scanning {last_block + 1} to {current_block}...")
+                    # Scan in small batches to be safe
+                    end_batch = min(last_block + 100, current_block)
+                    print(f"🔍 INDEXER: Scanning {last_block + 1} to {end_batch}...")
                     
-                    events = await fetch_events_raw(session, last_block + 1, current_block)
+                    events = await fetch_events_raw(session, last_block + 1, end_batch)
                     
                     for event in events:
-                        # Extract data from raw JSON structure
-                        # event['data'] is a list of hex strings
                         try:
+                            # Extract data from the Starknet event structure
                             onchain_id = int(event['data'][0], 16)
                             employer_hex = event['data'][1]
                             employer_int = int(employer_hex, 16)
                             
-                            print(f"✨ INDEXER: JobCreated detected! ID: {onchain_id} by {employer_hex}")
+                            print(f"✨ INDEXER: Job {onchain_id} found by {employer_hex}")
 
-                            # Matching logic (Integer based to ignore leading zeros)
+                            # Match to Django
                             unsynced_jobs = Job.objects.filter(onchain_id__isnull=True)
-                            found = False
                             for db_job in unsynced_jobs:
                                 if int(db_job.employer_address, 16) == employer_int:
                                     db_job.onchain_id = onchain_id
                                     db_job.save()
-                                    print(f"🔗 INDEXER: LINKED '{db_job.title}' to ID {onchain_id}")
-                                    found = True
+                                    print(f"🔗 INDEXER: LINKED Job '{db_job.title}' to ID {onchain_id}")
                                     break
-                            
-                            if not found:
-                                print(f"⚠️ INDEXER: No matching unsynced job in DB for {employer_hex}")
                         except Exception as parse_err:
-                            print(f"❌ INDEXER: Error parsing event data: {parse_err}")
+                            print(f"❌ INDEXER: Parse Error: {parse_err}")
 
-                    last_block = current_block
+                    last_block = end_batch
                 
-                await asyncio.sleep(15) 
+                # Sleep less during catch-up, more when synced
+                await asyncio.sleep(2 if last_block < current_block else 15) 
             except Exception as e:
-                print(f"⚠️ INDEXER Loop Error (Recovering...): {e}")
+                print(f"⚠️ INDEXER Warning: {e}")
                 await asyncio.sleep(10)
 
 # --- HEALTH CHECK SERVER ---
