@@ -6,6 +6,7 @@ import django
 import aiohttp
 from starknet_py.hash.selector import get_selector_from_name
 from asgiref.sync import sync_to_async
+from django.db import IntegrityError # IMPORT THIS
 from dotenv import load_dotenv
 
 # --- DJANGO INITIALIZATION ---
@@ -22,20 +23,22 @@ RPC_URL = os.getenv("STARKNET_URL")
 CONTRACT_ADDRESS = os.getenv("CONTRACT_ADDRESS")
 JOB_CREATED_SELECTOR = hex(get_selector_from_name("JobCreated"))
 
-# --- DATABASE HELPERS ---
 @sync_to_async
 def get_unsynced_jobs():
-    # We fetch ALL unsynced jobs to compare in memory
     return list(Job.objects.filter(onchain_id__isnull=True).values('id', 'employer_address', 'title'))
 
 @sync_to_async
 def update_job(db_id, onchain_id):
-    job = Job.objects.get(id=db_id)
-    job.onchain_id = onchain_id
-    job.save()
-    return job.title
+    try:
+        job = Job.objects.get(id=db_id)
+        job.onchain_id = onchain_id
+        job.save()
+        return f"SUCCESS: Linked '{job.title}'"
+    except IntegrityError:
+        return f"SKIP: ID {onchain_id} already exists in database."
+    except Exception as e:
+        return f"ERROR: {e}"
 
-# --- RAW RPC LOGIC ---
 async def fetch_events_raw(session, from_block, to_block):
     payload = {
         "jsonrpc": "2.0",
@@ -50,7 +53,8 @@ async def fetch_events_raw(session, from_block, to_block):
         "id": 1
     }
     async with session.post(RPC_URL, json=payload) as response:
-        return await response.json()
+        res = await response.json()
+        return res.get("result", {}).get("events", [])
 
 async def get_latest_block_raw(session):
     payload = {"jsonrpc": "2.0", "method": "starknet_blockNumber", "params": [], "id": 1}
@@ -59,68 +63,48 @@ async def get_latest_block_raw(session):
         return res["result"]
 
 async def monitor():
-    print(f"--- INDEXER STARTUP DIAGNOSTICS ---")
-    print(f"TARGET CONTRACT: {CONTRACT_ADDRESS}")
-    print(f"SELECTOR HASH: {JOB_CREATED_SELECTOR}")
+    print(f"📡 INDEXER: System Online. Matching jobs mathematically...")
     
     async with aiohttp.ClientSession() as session:
         try:
             current_tip = await get_latest_block_raw(session)
-            # LOOK BACK: We look back 500 blocks to find your recent tests
-            last_block = current_tip - 500 
-            print(f"SCANNING START: Block {last_block}")
+            last_block = current_tip - 200 # Catch recent events
         except Exception as e:
-            print(f"FATAL: Cannot connect to RPC: {e}")
+            print(f"FATAL: {e}")
             return
 
         while True:
             try:
-                # 1. Get the list of jobs currently in Django
                 db_jobs = await get_unsynced_jobs()
-                print(f"DB STATUS: {len(db_jobs)} jobs waiting for sync.")
-
                 current_tip = await get_latest_block_raw(session)
+
                 if current_tip > last_block:
                     end_batch = min(last_block + 100, current_tip)
-                    print(f"SCANNING: Blocks {last_block+1} to {end_batch}")
+                    events = await fetch_events_raw(session, last_block + 1, end_batch)
                     
-                    response = await fetch_events_raw(session, last_block+1, end_batch)
-                    
-                    if "result" in response:
-                        events = response["result"]["events"]
-                        for event in events:
-                            onchain_id = int(event['data'][0], 16)
-                            employer_onchain = event['data'][1] # This is the hex from blockchain
-                            
-                            print(f"FOUND EVENT: Job {onchain_id} created by {employer_onchain}")
+                    for event in events:
+                        onchain_id = int(event['data'][0], 16)
+                        employer_onchain = int(event['data'][1], 16)
 
-                            # 2. Compare the Addresses
-                            for dj_job in db_jobs:
-                                employer_db = dj_job['employer_address']
-                                
-                                # LOG THE COMPARISON (This is how we find the fault)
-                                print(f"COMPARING: On-chain({employer_onchain}) vs DB({employer_db})")
-                                
-                                # Final Logic: Convert both to integers to ignore string formatting
-                                if int(employer_onchain, 16) == int(employer_db, 16):
-                                    title = await update_job(dj_job['id'], onchain_id)
-                                    print(f"✅ SUCCESS: Linked Job '{title}' to ID {onchain_id}")
-                                    break
-                                else:
-                                    print(f"❌ NO MATCH: Integer values do not match.")
+                        for dj_job in db_jobs:
+                            if int(dj_job['employer_address'], 16) == employer_onchain:
+                                # CALL UPDATE WITH ERROR HANDLING
+                                result = await update_job(dj_job['id'], onchain_id)
+                                print(f"✨ {result}")
+                                break
 
-                    last_block = end_batch
+                    last_block = end_batch # ALWAYS update last_block to move forward
                 
-                await asyncio.sleep(20) # Avoid rate limits
+                await asyncio.sleep(15)
             except Exception as e:
-                print(f"ERROR: {e}")
+                print(f"⚠️ INDEXER Error: {e}")
+                # Update last_block anyway to prevent infinite loop on a bad block
+                last_block += 1 
                 await asyncio.sleep(10)
 
 if __name__ == "__main__":
-    # Start a dummy server for Render health check
     from http.server import HTTPServer, BaseHTTPRequestHandler
     class H(BaseHTTPRequestHandler):
         def do_GET(self): self.send_response(200); self.end_headers(); self.wfile.write(b"OK")
     threading.Thread(target=lambda: HTTPServer(('0.0.0.0', int(os.getenv("PORT", 10000))), H).serve_forever(), daemon=True).start()
-    
     asyncio.run(monitor())
