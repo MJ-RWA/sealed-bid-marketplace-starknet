@@ -172,8 +172,8 @@ function handleReveal(bid) {
 }
 
   if (job.status === "COMPLETED") {
-    const isWinner = job.winner === address;
-    const isOwner = job.employerAddress === address;
+    const isWinner = address && job.winner?.toLowerCase() === address.toLowerCase();
+    const isOwner = address && job.employerAddress?.toLowerCase() === address.toLowerCase();
 
     return (
       <div style={overlayStyle}>
@@ -183,22 +183,34 @@ function handleReveal(bid) {
          <p>{job.description}</p>
          <hr />
         {isWinner ? (
+          <div className="card">
+
             <div className="status-card success">
                <div className="badge"></div>
                <h3>Congratulations!</h3>
                <p>You have been hired for this Job. Check your dashboard for next steps.</p>
             </div>
+          </div>
           ) : isOwner ? (
+            <div className="card">
+
             <div className="status-card owner">
                <h3>Job Assigned</h3>
                <p>You hired <strong>{job.winner?.slice(0,8)}...</strong></p>
             </div>
+            
+            </div>
           ) : (
+
+            <div className="card">
             <div className="status-card neutral">
                <h3>Job Closed</h3>
               <p>This job has been awarded to another bidder.</p>
           <small>Winner: {job.winner.slice(0, 6)}...{job.winner.slice(-4)}</small>
             </div>
+
+            </div>
+
           )}
 
 
