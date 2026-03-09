@@ -1,11 +1,11 @@
-import { Link, useLocation} from "react-router-dom";
+import React from "react";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightArrowLeft, faWallet, faArrowRightFromBracket, faLock } from "@fortawesome/free-solid-svg-icons";
 import "./Navbar.css";
 import RoleSwitcher from "./RoleSwitcher";
 
 function Navbar({ address, connect, disconnect, switchAccount, role, setRole }) {
-    const location = useLocation();
     
     const shortenAddress = (addr) => {
         if (!addr) return "";
@@ -60,6 +60,7 @@ function Navbar({ address, connect, disconnect, switchAccount, role, setRole }) 
                                 <span className="address">{shortenAddress(address)}</span>
                             </div>
                             <div className="wallet-actions">
+                                {/* FIXED: Now triggers the account switcher */}
                                 <button onClick={switchAccount} className="butt">
                                     <FontAwesomeIcon icon={faArrowRightArrowLeft} />
                                 </button>

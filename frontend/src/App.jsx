@@ -24,13 +24,13 @@ function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const background = location.state && location.state.background;
-  
   const [isLoading, setIsLoading] = useState(false);
   const [pendingRole, setPendingRole] = useState(null);
   const [role, setRole] = useState(() => localStorage.getItem("userRole") || null);
   const [address, setAddress] = useState(() => localStorage.getItem("walletAddress") || null);
   const [jobs, setJobs] = useState([]);
 
+  // 1. Initial Data Fetch
   useEffect(() => {
     fetch("https://fairlance.onrender.com/api/jobs/")
       .then(res => res.json())
@@ -41,22 +41,50 @@ function App() {
       .catch(() => setJobs([]));
   }, []);
 
+  // 2. Real-time Account Switching Listener
+  useEffect(() => {
+    if (window.starknet) {
+      window.starknet.on("accountsChanged", (accounts) => {
+        if (accounts.length > 0) {
+          const newAddress = accounts[0];
+          setAddress(newAddress);
+          localStorage.setItem("walletAddress", newAddress);
+          console.log("🦊 Wallet Account Switched:", newAddress);
+        } else {
+          // If user locks wallet
+          setAddress(null);
+        }
+      });
+    }
+  }, []);
+
   const connect = async () => {
     const activeRole = pendingRole || role;
     if (!activeRole) return alert("Please select a role first!");
-    setRole(activeRole);
+
     setIsLoading(true);
     try {
       const starknet = await starknetConnect();
-      if (!starknet) { setIsLoading(false); return; }
+      if (!starknet) {
+        setIsLoading(false);
+        return;
+      }
+      
+      setRole(activeRole);
+      localStorage.setItem("userRole", activeRole);
+
       await starknet.enable();
+
       if (starknet.isConnected) {
         setAddress(starknet.selectedAddress);
         localStorage.setItem("walletAddress", starknet.selectedAddress);
-        localStorage.setItem("userRole", activeRole);
         if (location.pathname === "/" || location.pathname === "/login") navigate("/ExploreMarket");
       }
-    } catch (e) { setIsLoading(false); }
+    } catch (e) {
+      setIsLoading(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const disconnect = async () => {
@@ -67,6 +95,22 @@ function App() {
     navigate("/");
   };
 
+  // 3. IMPROVED SWITCH ACCOUNT: Re-opens the wallet picker
+  const switchAccount = async () => {
+    try {
+        const starknet = await starknetConnect({ modalMode: "alwaysAsk" });
+        if (starknet) {
+            await starknet.enable();
+            setAddress(starknet.selectedAddress);
+            localStorage.setItem("walletAddress", starknet.selectedAddress);
+        }
+    } catch (e) {
+        console.error("Switch account failed", e);
+    }
+  };
+
+  const safeJobs = Array.isArray(jobs) ? jobs : [];
+
   return (
     <>
       <Routes location={background || location}>
@@ -76,25 +120,23 @@ function App() {
             <Route path="/login" element={<LoginModal isOpen={true} onClose={() => navigate("/")} onSelectRole={setPendingRole} pendingRole={pendingRole} onConnect={connect} loading={isLoading} />} />
           </>
         ) : (
-          <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={connect} disconnect={disconnect} role={role} setRole={setRole} />}>
-            <Route index element={<ExploreMarket jobs={jobs} />} />
-            <Route path="ExploreMarket" element={<ExploreMarket jobs={jobs} />} />
-            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs}/>} />
-            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={jobs} setJobs={setJobs} address={address} /></ProtectedRoute>} />
-            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={jobs} address={address} /></ProtectedRoute>} />
-            {/* Main Job Route */}
-            <Route path="jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
-            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs} />} />
+          <Route path="/" element={<MainLayout address={address} connect={connect} switchAccount={switchAccount} disconnect={disconnect} role={role} setRole={setRole} />}>
+            <Route index element={<ExploreMarket jobs={safeJobs} />} />
+            <Route path="ExploreMarket" element={<ExploreMarket jobs={safeJobs} />} />
+            <Route path="create-job" element={<JobForm address={address} setJobs={setJobs} jobs={safeJobs}/>} />
+            <Route path="/Myprojects" element={<ProtectedRoute role={role} requiredRole="employer"><MyProjects jobs={safeJobs} address={address} /></ProtectedRoute>} />
+            <Route path="/MyBids" element={<ProtectedRoute role={role} requiredRole="freelancer"><MyBids jobs={safeJobs} address={address} /></ProtectedRoute>} />
+            <Route path="jobs/:id" element={<JobDetail jobs={safeJobs} address={address} role={role} setJobs={setJobs} />} />
+            <Route path="Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={safeJobs} />} />
           </Route>
         )}
       </Routes>
 
-      {/* THE MODAL OVERLAY SECTION - FIXED PROPS */}
       {background && (
         <Routes>
-          <Route path="/jobs/:id" element={<JobDetail jobs={jobs} setJobs={setJobs} address={address} role={role} />} />
-          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={jobs} />} />
-          <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={jobs}/>} />
+          <Route path="/jobs/:id" element={<JobDetail jobs={safeJobs} address={address} role={role} setJobs={setJobs} />} />
+          <Route path="/create-job" element={<JobForm address={address} setJobs={setJobs} jobs={safeJobs} />} />
+          <Route path="/Hire/:jobId/:bidder" element={<Hire address={address} setJobs={setJobs} jobs={safeJobs}/>} />
         </Routes>
       )}
     </>
