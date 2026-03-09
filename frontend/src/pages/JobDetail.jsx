@@ -1,126 +1,113 @@
-import { Outlet, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import BidForm from "../components/BidForm";
-import { Link } from "react-router-dom";
-import "./JobDetail.css"
-import { useState, useEffect, useCallback } from "react";
+import React, { useState } from "react";
+import { Contract } from "starknet";
+import ABI_FILE from "../abi.json";
+import "./JobDetail.css";
 
-function JobDetail({ jobs, setJobs, address, onSubmitReveal, role }) {
+const CONTRACT_ADDRESS = "0x07d4764a30d3eb83c00730c059b71b796692f292e94fc6eb2c20dea4da2b10ae";
+
+function JobDetail({ jobs, address, role }) {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [loading, setLoading] = useState(false);
 
-  // Find the job by DB ID or Onchain ID (robust matching)
   const job = jobs?.find(j => j && (String(j.id) === id || String(j.onchain_id) === id));
+  
+  if (!job) return <div className="loading">Loading job details...</div>;
 
-  const changeStatus = useCallback((newStatus) => {
-    if (!job) return;
-    setJobs(prev =>
-      prev.map(j => (j.id === job.id ? { ...j, status: newStatus } : j))
-    );
-  }, [job, setJobs]);
+  const isOwner = address?.toLowerCase() === (job.employer_address || job.employerAddress)?.toLowerCase();
+  const status = job.status?.toUpperCase();
 
-  useEffect(() => {
-    if (job && job.status?.toUpperCase() === "BIDDING" && job.deadline) {
-      const checkDeadline = () => {
-        const now = Date.now();
-        const deadlineTime = new Date(job.deadline).getTime();
-        if (now >= deadlineTime) {
-          changeStatus("REVEAL");
-        }
-      };
-      checkDeadline();
-      const interval = setInterval(checkDeadline, 1000);
-      return () => clearInterval(interval);
+  // --- EMPLOYER: Start Reveal Phase ---
+  const handleStartReveal = async () => {
+    setLoading(true);
+    try {
+      const account = window.starknet.account;
+      const actualAbi = ABI_FILE.abi ? ABI_FILE.abi : ABI_FILE;
+      const contract = new Contract(actualAbi, CONTRACT_ADDRESS, account);
+      
+      const { transaction_hash } = await contract.start_reveal_phase(job.onchain_id);
+      alert("Reveal Phase Started! Hash: " + transaction_hash);
+      navigate("/Myprojects");
+    } catch (e) {
+      alert("Error: " + e.message);
+    } finally {
+      setLoading(false);
     }
-  }, [job, changeStatus]);
-
-  const handleCommitBid = (bidData) => {
-    if (!job) return;
-    setJobs(prev => prev.map(j => {
-      if (j.id === job.id) {
-        return { ...j, bids: [...(j.bids || []), bidData] };
-      }
-      return j;
-    }));
   };
 
-  // 1. FALLBACK: If job is still loading or not found
-  if (!job) {
-    return (
-      <div style={overlayStyle}>
-        <div className="jobdetail" style={modalStyle}>
-          <div className="cancelbtn"><button onClick={() => navigate(-1)}>✕</button></div>
-          <div style={{textAlign: 'center', padding: '40px'}}>
-            <h2>Job Not Found</h2>
-            <p style={{color: 'gray'}}>ID: {id}</p>
-            <button onClick={() => navigate(-1)} style={{marginTop: '20px', color: 'cyan'}}>Go Back</button>
+  // --- FREELANCER: Reveal Bid ---
+  const handleRevealBid = async () => {
+    // 1. Get secret data from LocalStorage
+    const secretKey = `bid_${job.onchain_id}_${address}`;
+    const secretData = JSON.parse(localStorage.getItem(secretKey));
+
+    if (!secretData) {
+      alert("Secret salt not found in this browser. You must manually enter your salt to reveal.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const account = window.starknet.account;
+      const actualAbi = ABI_FILE.abi ? ABI_FILE.abi : ABI_FILE;
+      const contract = new Contract(actualAbi, CONTRACT_ADDRESS, account);
+
+      // reveal_bid(job_id, price, timeline, salt)
+      const { transaction_hash } = await contract.reveal_bid(
+        job.onchain_id,
+        secretData.price,
+        secretData.timeline,
+        secretData.salt
+      );
+
+      alert("Bid Successfully Revealed! Hash: " + transaction_hash);
+      navigate("/ExploreMarket");
+    } catch (e) {
+      alert("Reveal Failed: " + e.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="overlay">
+      <div className="jobdetail-modal">
+        <button className="close-btn" onClick={() => navigate(-1)}>✕</button>
+        <h1>{job.title}</h1>
+        <p>{job.description}</p>
+        <hr />
+
+        {/* PHASE 1: BIDDING */}
+        {status === "BIDDING" && (
+          <>
+            {isOwner ? (
+                <button className="action-btn" onClick={handleStartReveal} disabled={loading}>
+                  {loading ? "Processing..." : "Start Reveal Phase"}
+                </button>
+            ) : (
+                <BidForm job={job} address={address} />
+            )}
+          </>
+        )}
+
+        {/* PHASE 2: REVEAL */}
+        {status === "REVEAL" && (
+          <div className="reveal-area">
+            <h3>Reveal Phase is Live</h3>
+            {job.bids?.some(b => b.bidder_address === address) ? (
+               <button className="action-btn" onClick={handleRevealBid} disabled={loading}>
+                 {loading ? "Unsealing..." : "Reveal My Bid"}
+               </button>
+            ) : (
+               <p>Waiting for freelancers to reveal bids...</p>
+            )}
           </div>
-        </div>
+        )}
       </div>
-    );
-  }
-
-  // Normalize status for comparisons
-  const currentStatus = job.status?.toUpperCase() || "BIDDING";
-
-  // 2. BIDDING PHASE
-  if (currentStatus === "BIDDING") {
-    return (
-      <div style={overlayStyle}>
-        <div className="jobdetail" style={modalStyle}>
-          <div className="cancelbtn"><button onClick={() => navigate(-1)}>✕</button></div> 
-          <h1>{job.title}</h1>
-          <p>{job.description}</p>
-          <hr />
-          <span className="apply">Apply for this job by submitting your bid</span>
-          <BidForm job={job} address={address} onSubmitBid={handleCommitBid} />
-          <Outlet />
-        </div>
-      </div>
-    );
-  }
-
-  // 3. REVEAL PHASE
-  if (currentStatus === "REVEAL") {
-    return (
-      <div style={overlayStyle}>
-        <div className="jobdetail" style={modalStyle}>
-          <div className="cancelbtn"><button onClick={() => navigate(-1)}>✕</button></div>
-          <h1>{job.title}</h1>
-          <p>{job.description}</p>
-          <hr />
-          <h3 style={{marginBottom: '15px'}}>Bids in Reveal Phase</h3>
-          {job.bids?.length > 0 ? job.bids.map((b) => (
-            <div key={b.bidder} className="bid-row" style={{padding: '10px', borderBottom: '1px solid #333'}}>
-              <span>{b.bidder?.slice(0, 8)}...</span>
-              {b.revealed ? <span style={{color: 'green'}}>✅ Revealed</span> : <span style={{color: 'orange'}}>🔒 Locked</span>}
-            </div>
-          )) : <p>No bids received yet.</p>}
-        </div>
-      </div>
-    );
-  }
-
-  // 4. COMPLETED PHASE
-  if (currentStatus === "COMPLETED" || currentStatus === "FINALIZED") {
-    return (
-      <div style={overlayStyle}>
-        <div className="jobdetail" style={modalStyle}>
-          <div className="cancelbtn"><button onClick={() => navigate(-1)}>✕</button></div> 
-          <h1>{job.title}</h1>
-          <p>Job Closed</p>
-          <div className="status-card neutral">
-             <h3>Job Awarded</h3>
-             <p>This project has been finalized on-chain.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return null;
+    </div>
+  );
 }
-
-const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.75)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "30px", borderRadius: "12px", width: "90%", maxWidth: "600px", color: "white" };
 
 export default JobDetail;

@@ -1,54 +1,60 @@
-import { Link } from "react-router-dom";
+import React from "react";
+import { Link, useLocation } from "react-router-dom";
 import "./MyBids.css";
 
-function MyBids({ jobs, address }) {
-  // 1. Filter jobs: Show only if the current user has a bid in that job
-  const myBids = jobs.filter(job => 
-    job && job.bids?.some(bid => bid.bidder.toLowerCase() === address?.toLowerCase())
-  );
+function MyBids({ jobs = [], address }) {
+    const location = useLocation();
 
-  return (
-    <div className="my-bids-page">
-      <h2 className="projh">My Active Bids</h2>
+    // Filter jobs where the current user has submitted a bid
+    const myBids = jobs.filter(job => 
+        job?.bids?.some(bid => 
+            bid.bidder_address?.toLowerCase() === address?.toLowerCase()
+        )
+    );
 
-      {myBids.length === 0 ? (
-        <p className="projp">You haven't placed any bids yet.</p>
-      ) : (
-        myBids.map(job => {
-          // Find the specific bid placed by the current user for this job
-          const userBid = job.bids.find(b => b.bidder.toLowerCase() === address?.toLowerCase());
+    return (
+        <div className="my-bids-container">
+            <h1 className="projh">My Submitted Bids</h1>
+            <p className="subtitle">Track your proposals and unseal them during the reveal phase.</p>
 
-          return (
-            <div key={job.id} className="bidcontainer">
-              <div className="displayTitle">
-                <h2 className="projh">{job.title}</h2>
-                <div className="bid-status-tags">
-                  <span className={`state ${job.status.toLowerCase()}`}>
-                    Phase: {job.status}
-                  </span>
-                  {userBid?.revealed && <span className="commits">Revealed</span>}
-                  {!userBid?.revealed && <span className="commits">Committed</span>}
+            {myBids.length === 0 ? (
+                <div className="empty-state">
+                    <p>You haven't bidded on any projects yet.</p>
+                    <Link to="/ExploreMarket" className="explore-link">Browse Marketplace</Link>
                 </div>
-              </div>
-
-              <div className="provebtn">
-                {/* 2. Show Reveal button only during REVEAL phase and if not already revealed */}
-                {job.status === "REVEAL" && !userBid?.revealed && (
-                   <Link to={`/jobs/${job.id}`}>
-                      <button className="prove">Reveal & Prove</button>
-                   </Link>
-                )}
-
-                <Link to={`/jobs/${job.id}`}>
-                  <button className="det">View Job Details</button>
-                </Link>
-              </div>
-            </div>
-          );
-        })
-      )}
-    </div>
-  );
+            ) : (
+                <div className="bids-grid">
+                    {myBids.map(job => {
+                        // Find the specific bid for this user
+                        const myBid = job.bids.find(b => b.bidder_address?.toLowerCase() === address?.toLowerCase());
+                        
+                        return (
+                            <Link 
+                                key={job.id} 
+                                to={`/jobs/${job.id}`} 
+                                state={{ background: location }}
+                                className="bid-card-link"
+                            >
+                                <div className="bid-card">
+                                    <div className="bid-card-header">
+                                        <span className={`status-badge ${job.status.toLowerCase()}`}>
+                                            {job.status}
+                                        </span>
+                                        <span className="job-id">Job #{job.onchain_id || "..."}</span>
+                                    </div>
+                                    <h3>{job.title}</h3>
+                                    <div className="bid-summary">
+                                        <p><strong>Your Proposal:</strong> {myBid?.proposal?.substring(0, 50)}...</p>
+                                        <p><strong>Status:</strong> {myBid?.revealed ? "✅ Revealed" : "🔒 Sealed"}</p>
+                                    </div>
+                                </div>
+                            </Link>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default MyBids;
