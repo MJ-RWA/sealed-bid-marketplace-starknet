@@ -3,21 +3,22 @@ import BidForm from "../components/BidForm";
 import React, { useState } from "react";
 import { Contract } from "starknet";
 import ABI_FILE from "../abi.json";
+import { normalizeAddress } from "../services/blockchainUtils";
 import "./JobDetail.css";
 
 const CONTRACT_ADDRESS = "0x07d4764a30d3eb83c00730c059b71b796692f292e94fc6eb2c20dea4da2b10ae";
 
-function JobDetail({ jobs, address, role, setJobs }) {
+function JobDetail({ jobs, address, role }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
 
   const job = jobs?.find(j => j && (String(j.id) === id || String(j.onchain_id) === id));
-  
   if (!job) return null;
 
-  const normalize = (addr) => addr ? BigInt(addr).toString(16).toLowerCase() : "";
-  const isOwner = normalize(address) === normalize(job.employer_address);
+  const userAddr = normalizeAddress(address);
+  const employerAddr = normalizeAddress(job.employer_address);
+  const isOwner = userAddr === employerAddr;
   const status = job.status?.toUpperCase();
 
   const handleStartReveal = async () => {
@@ -32,7 +33,7 @@ function JobDetail({ jobs, address, role, setJobs }) {
 
   const handleRevealBid = async () => {
     const secretData = JSON.parse(localStorage.getItem(`bid_${job.onchain_id}_${address}`));
-    if (!secretData) return alert("Secret salt not found. Did you bid using this browser?");
+    if (!secretData) return alert("Secret salt not found in this browser.");
 
     setLoading(true);
     try {
@@ -48,14 +49,13 @@ function JobDetail({ jobs, address, role, setJobs }) {
       <div style={modalStyle}>
         <button className="cancelbtn" onClick={() => navigate(-1)} style={{float:'right'}}>✕</button>
         <h1 className="projh">{job.title}</h1>
-        <p style={{marginTop: '10px'}}>{job.description}</p>
+        <p>{job.description}</p>
         <hr style={{margin: '20px 0', border: '0', borderTop: '1px solid var(--divider)'}} />
 
         {status === "BIDDING" && (
           isOwner ? (
              <div style={{textAlign:'center'}}>
-               <p>Bidding in progress...</p>
-               <button className="btn2" onClick={handleStartReveal} disabled={loading} style={{marginTop:'15px'}}>
+               <button className="btn2" onClick={handleStartReveal} disabled={loading}>
                  {loading ? "Processing..." : "Start Reveal Phase"}
                </button>
              </div>
@@ -65,11 +65,15 @@ function JobDetail({ jobs, address, role, setJobs }) {
         {status === "REVEAL" && (
           <div style={{textAlign: 'center'}}>
             <h3>Phase 2: Reveal Phase Active</h3>
-            {job.bids?.some(b => normalize(b.bidder_address) === normalize(address)) ? (
-                <button className="btn2" onClick={handleRevealBid} disabled={loading} style={{marginTop:'15px'}}>
+            <br />
+            {/* FIX: Use normalized address matching to show the button */}
+            {job.bids?.some(b => normalizeAddress(b.bidder_address) === userAddr) ? (
+                <button className="btn2" onClick={handleRevealBid} disabled={loading}>
                   {loading ? "Unsealing..." : "Reveal My Bid"}
                 </button>
-            ) : <p>The employer has started the Reveal Phase. Waiting for bids to be unsealed.</p>}
+            ) : (
+                <p>You have not submitted a bid for this project.</p>
+            )}
           </div>
         )}
       </div>
@@ -78,6 +82,6 @@ function JobDetail({ jobs, address, role, setJobs }) {
 }
 
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.85)", backdropFilter: "blur(6px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "40px", borderRadius: "15px", width: "95%", maxWidth: "600px", color: "white", border: "1px solid var(--border-main)", maxHeight: '90vh', overflowY: 'auto' };
+const modalStyle = { background: "var(--Navbar-bg)", padding: "40px", borderRadius: "15px", width: "95%", maxWidth: "600px", color: "white", border: "1px solid var(--border-main)", maxHeight: '85vh', overflowY: 'auto' };
 
 export default JobDetail;
