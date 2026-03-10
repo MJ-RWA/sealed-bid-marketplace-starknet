@@ -9,7 +9,7 @@ import "./JobDetail.css";
 const CONTRACT_ADDRESS = "0x07d4764a30d3eb83c00730c059b71b796692f292e94fc6eb2c20dea4da2b10ae";
 const API_BASE = "https://fairlance.onrender.com/api/jobs/";
 
-function JobDetail({ jobs, address, onUpdate }) {
+function JobDetail({ jobs, address, role, onUpdate }) {
   const navigate = useNavigate();
   const { id } = useParams();
   const [loading, setLoading] = useState(false);
@@ -27,50 +27,29 @@ function JobDetail({ jobs, address, onUpdate }) {
       const account = window.starknet.account;
       const contract = new Contract(ABI_FILE.abi || ABI_FILE, CONTRACT_ADDRESS, account);
       
-      // 1. BLOCKCHAIN CALL
-      const tx = await contract[blockchainFn](job.onchain_id);
+      // 1. Blockchain
+      await contract[blockchainFn](job.onchain_id);
       
-      // 2. BACKEND UPDATE (Manual sync because no indexer)
+      // 2. Direct Backend Update
       await fetch(`${API_BASE}${job.id}/`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ status: newStatus })
       });
 
-      alert(`Success: ${newStatus} phase active!`);
-      if (onUpdate) onUpdate();
-      navigate("/ExploreMarket");
-    } catch (e) { alert(e.message); } finally { setLoading(false); }
-  };
-
-  const handleRevealBid = async () => {
-    const data = JSON.parse(localStorage.getItem(`bid_${job.onchain_id}_${address}`));
-    setLoading(true);
-    try {
-      const contract = new Contract(ABI_FILE.abi || ABI_FILE, CONTRACT_ADDRESS, window.starknet.account);
-      await contract.reveal_bid(job.onchain_id, data.price, data.timeline, data.salt);
-      
-      // Update bid status in backend manually
-      // find the bid ID first...
-      const myBid = job.bids.find(b => normalizeAddress(b.bidder_address) === userAddr);
-      await fetch(`https://fairlance.onrender.com/api/bids/${myBid.id}/`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ is_shortlisted: true }) // Simulating reveal
-      });
-
-      alert("Bid Revealed!");
+      alert(`Success! Phase changed to ${newStatus}`);
       if (onUpdate) onUpdate();
       navigate("/ExploreMarket");
     } catch (e) { alert(e.message); } finally { setLoading(false); }
   };
 
   return (
-    <div className="jobdetail-modal" style={overlayStyle}>
+    <div style={overlayStyle}>
       <div style={modalStyle}>
+        <button className="cancelbtn" onClick={() => navigate(-1)} style={{float:'right'}}>✕</button>
         <h1 className="projh">{job.title}</h1>
         <p>{job.description}</p>
-        <hr />
+        <hr style={{margin: '20px 0'}} />
 
         {status === "BIDDING" && (
           isOwner ? <button className="btn2" onClick={() => handleUpdateStatus("REVEAL", "start_reveal_phase")}>Start Reveal Phase</button> 
@@ -80,18 +59,18 @@ function JobDetail({ jobs, address, onUpdate }) {
         {status === "REVEAL" && (
           <div style={{textAlign: 'center'}}>
             {isOwner ? <button className="btn2" onClick={() => handleUpdateStatus("SHORTLISTED", "finalize_and_shortlist")}>Close & Shortlist</button>
-                     : <button className="btn2" onClick={handleRevealBid}>Reveal My Bid</button>}
+                     : <p>Waiting for reveal period to end...</p>}
           </div>
         )}
 
         {status === "SHORTLISTED" && (
             <div style={{textAlign:'center'}}>
-                <h3>Shortlisted Candidates</h3>
-                {/* For the demo, we show everyone who revealed */}
+                <h3>Top Candidates</h3>
+                <p>Hire the best match for your project.</p>
                 {job.bids?.map(b => (
-                    <div key={b.id} className="bid-row">
+                    <div key={b.id} className="bid-row" style={{padding:'10px', borderBottom:'1px solid #333'}}>
                         <span>{b.bidder_address.slice(0,10)}...</span>
-                        {isOwner && <button className="btn2" onClick={() => handleUpdateStatus("COMPLETED", "select_winner")}>Hire</button>}
+                        {isOwner && <button className="prove1" onClick={() => handleUpdateStatus("COMPLETED", "select_winner")}>Hire</button>}
                     </div>
                 ))}
             </div>
@@ -102,6 +81,6 @@ function JobDetail({ jobs, address, onUpdate }) {
 }
 
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(11, 21, 33, 0.9)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 };
-const modalStyle = { background: "var(--Navbar-bg)", padding: "40px", borderRadius: "15px", width: "95%", maxWidth: "600px" };
+const modalStyle = { background: "var(--Navbar-bg)", padding: "40px", borderRadius: "15px", width: "95%", maxWidth: "600px", color: "white" };
 
 export default JobDetail;
