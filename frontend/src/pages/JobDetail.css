@@ -120,3 +120,8 @@
 .owner{
     background: var(--hire-bg);
 }
+
+.card{
+    display: flex;
+    justify-content: center;
+}
