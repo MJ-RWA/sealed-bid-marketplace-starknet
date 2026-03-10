@@ -1,211 +1,122 @@
 import { useState } from "react";
-import { Navigate, useNavigate, useLocation, Link, Outlet } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import React from "react";
 import ProposalForm from "./ProposalForm";
+import { Contract } from "starknet";
+import ABI_FILE from "../abi.json";
+import { generateBidCommitment, generateRandomSalt } from "../services/blockchainUtils";
 import "./BidForm.css";
 
+// CONFIGURATION
+const CONTRACT_ADDRESS = "0x07d4764a30d3eb83c00730c059b71b796692f292e94fc6eb2c20dea4da2b10ae";
+const BIDS_API_URL = "https://fairlance.onrender.com/api/bids/";
 
-function BidForm({ job, jobs, address, onSubmitBid }) {
-const navigate = useNavigate();
-const [bidAmount, setBidAmount] = useState("");
- const [timeframe, setTimeframe] = useState("");
- const [commitSuccess, setCommitSuccess] = useState(false);
- const [proposal, setProposal] = useState("");
- const isOwner = address?.toLowerCase() === job?.employerAddress?.toLowerCase();
- const hasBid = job.bids.some(b => b.bidder === address);
- const bidCount = job.bids?.length || 0;
+function BidForm({ job, address, onSubmitBid }) {
+  const navigate = useNavigate();
+  const [bidAmount, setBidAmount] = useState("");
+  const [timeframe, setTimeframe] = useState("");
+  const [proposal, setProposal] = useState("");
+  const [loading, setLoading] = useState(false);
 
- 
+  const isOnChain = job?.onchain_id !== null && job?.onchain_id !== undefined;
+  const isOwner = address?.toLowerCase() === (job?.employer_address || job?.employerAddress)?.toLowerCase();
+  const hasBid = job?.bids?.some(b => b.bidder_address?.toLowerCase() === address?.toLowerCase());
 
-
- function handleCommit(e) {
+  async function handleCommit(e) {
     e.preventDefault();
 
-    if (!bidAmount) return;
+    if (!window.starknet?.isConnected) return alert("Please connect wallet");
+    if (!isOnChain) return alert("This job is not yet synced with Starknet.");
 
-    // 1. New Check: Prevent employer from bidding on their own job
-    if (address?.toLowerCase() === job.employerAddress?.toLowerCase()) {
-      alert("Action denied: You cannot bid on a job you created.");
-      return;
-    }
+    setLoading(true);
 
-    
-    if (job.bids.some(b => b.bidder === address)) {
-      alert("You already committed a bid.");
-      return;
-    }
+    try {
+      const salt = generateRandomSalt();
+      const commitment = generateBidCommitment(bidAmount, timeframe, salt);
 
-    const newBid = {
-      bidder: address,
-      amount: (bidAmount),
-      committedAt: Date.now(),
-      timeframe:(timeframe),
-      proposal:proposal,
-      revealed: false
-    };
+      // 1. STARKNET TRANSACTION FIRST
+      const actualAbi = ABI_FILE.abi ? ABI_FILE.abi : ABI_FILE;
+      const account = window.starknet.account;
+      const marketplaceContract = new Contract(actualAbi, CONTRACT_ADDRESS, account);
 
-    onSubmitBid(newBid);
-    
-    setProposal("");
-    setBidAmount("");
-    setTimeframe("");
-    navigate("commit-message");
-    setCommitSuccess(true);
-  }
+      console.log("Requesting Wallet Signature for commitment...");
+      const { transaction_hash } = await marketplaceContract.submit_bid(
+        job.onchain_id, 
+        commitment
+      );
 
+      // 2. SAVE TO BACKEND (Only if wallet succeeds)
+      console.log("Saving Bid metadata to Django...");
+      const backendResponse = await fetch(BIDS_API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          job: job.id, // IMPORTANT: Sending the Primary Key ID for the ForeignKey
+          bidder_address: window.starknet.selectedAddress,
+          proposal: proposal,
+          // We do not send price/time yet (Sealed!)
+        }),
+      });
 
+      if (!backendResponse.ok) {
+          const err = await backendResponse.text();
+          console.error("Django rejected the bid:", err);
+      }
 
-  //  backend call 
-// async function handleCommit(e) { 
-//   e.preventDefault();
+      // 3. SAVE SECRETS LOCALLY (Required for the REVEAL phase later)
+      const localBidKey = `bid_${job.onchain_id}_${window.starknet.selectedAddress}`;
+      localStorage.setItem(localBidKey, JSON.stringify({
+          price: bidAmount,
+          timeline: timeframe,
+          salt: salt,
+          txHash: transaction_hash
+      }));
 
-//   if (!bidAmount || loading) return; 
-
-
-//   if (address?.toLowerCase() === job.employerAddress?.toLowerCase()) {
-//     alert("You cannot bid on your own job.");
-//     return;
-//   }
-
-//   setLoading(true); 
-
-//   try {
-   
-//     const response = await fetch(`${process.env.REACT_APP_API_URL}/jobs/${job.id}/bids`, {
-//       method: 'POST',
-//       headers: { 'Content-Type': 'application/json' },
-//       body: JSON.stringify({
-//         bidder: address,
-//         amount: bidAmount,
-//         timeframe: timeframe,
-//         proposal: proposal,
-//         committedAt: Date.now(),
-//         revealed: false
-//       }),
-//     });
-
-//     if (!response.ok) {
-//       const errorData = await response.json();
-//       throw new Error(errorData.message || "Failed to submit bid");
-//     }
-
-//     const savedBid = await response.json();
-
-    
-//     onSubmitBid(savedBid); 
-    
-//     setProposal("");
-//     setBidAmount("");
-//     setTimeframe("");
-//     navigate("commit-message");
-//     setCommitSuccess(true);
-
-//   } catch (error) {
-//     console.error("Submission Error:", error);
-//     alert(error.message);
-//   } finally {
-//     setLoading(false); 
-//   }
-// }
-
-// Replace your current if (hasBid) block with this:
-if (hasBid) {
-  return (
-    <div className="success-container">
-       <h3>Bid Already Submitted</h3>
-        <p>Please wait for the reveal phase.</p>
-       {/* Use a Link here instead of Navigate to avoid the loop */}
-       <Link to={`/jobs/${job.id}/commit-message`} className="view-link">
-         View on StarkScan
-       </Link>
-    </div>
-  );
-}
-
-  if (isOwner) {
-    return (
-      <div className="owner-view">
-        <div className="modal-header">
-          
-  
-        </div>
-        <div style={{ padding: "20px", textAlign: "center" }}>
-          <p>You created this job. You can view bids once the reveal phase begins.</p>
-        </div>
-         <div className="manage">
-          <h2>Manage Your Job</h2>
-         </div>
-      </div>
-    );
-  }
-   
-  
-  
-  return (
-    <div>
-     
-      {/* Header */}
-        <div className="modal-header">
-          <div>
-            {/* <h2>{selectedJob.title}</h2> */}
-            <div className="status-row">
-              <span className="status commit">PHASE 1: COMMIT</span>
-              <span className="status reveal">PHASE 2: REVEAL</span>
-            </div>
-          </div>
-           
-          <div className="bid-counter">
-      <span className="pulse-dot"></span> 
-      <strong>{bidCount}</strong> {bidCount === 1 ? 'Bid' : 'Bids'} Committed
-       </div>
-
-
-        </div>
-        <br />
-      <form onSubmit={handleCommit}>
-        <div className="forms"> 
-    <div className="input-wrap"> 
-      <label className="label1">PRICE (STRK)</label>
-      <input 
-        type="number" 
-        className="bid-input" 
-        placeholder="Enter your bid amount" 
-        value={bidAmount} 
-        onChange={(e) => setBidAmount(e.target.value)} 
-        required 
-      />
-    </div>
-
-    <div className="input-wrap">
-      <label className="label1">TIMEFRAME (Weeks)</label>
-      <input 
-        type="number" 
-        className="bid-input" 
-        required 
-        value={timeframe}
-        onChange={(e) => setTimeframe(e.target.value)}
-      />
-    </div>
-  </div>
-       <br />
-       
-        <ProposalForm 
-        value={proposal}
-        onChange={setProposal}/>
-
-        <br />
-        <div class="submit">
-        <Link to="commit-message"></Link>
-        <button class="submit1"type="submit">Seal & commit to contract</button>
-        
-        </div>
-          <span class="span1">Warning: Your bid cannot be changed once commited. The Hash ensures fairness</span>
-          {commitSuccess && <p>Bid successfully committed!</p>}
-      </form>
-
-
+      alert("Bid Sealed & Submitted!\nHash: " + transaction_hash);
       
-    </div>
+      // Navigate back to clear the modal and refresh the view
+      navigate("/ExploreMarket");
+
+    } catch (error) {
+      console.error("Bid Submission Error:", error);
+      alert("Error: " + error.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (isOwner) return <p className="notice-text">You are the employer.</p>;
+  if (hasBid) return <div className="success-container"><h3>Bid Submitted</h3><p>Waiting for reveal phase.</p></div>;
+
+  return (
+    <form onSubmit={handleCommit}>
+      <div className="modal-header">
+        <div className="status-row">
+            <span className="status commit">PHASE 1: COMMIT</span>
+            <span className="status reveal">PHASE 2: REVEAL</span>
+        </div>
+      </div>
+      <br />
+      <div className="forms"> 
+        <div className="input-wrap"> 
+          <label className="label1">PRICE (STRK)</label>
+          <input type="number" className="bid-input" placeholder="Enter amount" value={bidAmount} onChange={(e) => setBidAmount(e.target.value)} required />
+        </div>
+        <div className="input-wrap">
+          <label className="label1">TIMEFRAME (Weeks)</label>
+          <input type="number" className="bid-input" placeholder="e.g. 2" value={timeframe} onChange={(e) => setTimeframe(e.target.value)} required />
+        </div>
+      </div>
+      <br />
+      <ProposalForm value={proposal} onChange={setProposal} />
+      <br />
+      <div className="submit">
+        <button className="submit1" type="submit" disabled={loading || !isOnChain}>
+          {loading ? "Sealing..." : "Seal & commit to contract"}
+        </button>
+      </div>
+      <span className="span1">Warning: Your bid cannot be changed once committed. The Hash ensures fairness.</span>
+    </form>
   );
 }
 
