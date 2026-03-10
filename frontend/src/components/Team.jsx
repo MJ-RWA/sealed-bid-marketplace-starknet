@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import mekjah from '../assets/mekjah.jpeg';
 import joel from '../assets/joel.jpeg';
 import erasmus from '../assets/erasmus.jpeg';
-import Ashraf from '../assets/ashraf.jpeg';
+import ashraf from '../assets/ashraf.jpeg';
 import daniel from '../assets/daniel.jpeg';
 
 
@@ -11,7 +11,7 @@ const Team = () => {
   const members = [
     { name: "Mekjah Bassey", role: "Frontend Developer", image: mekjah},
     { name: "Ekezie Daniel", role: "Backend/Contract Developer", image: daniel },
-    { name: "Ashraf Amoka", role: "UI/UX Designer", image: Ashraf },
+    { name: "Ashraf Amoka", role: "UI/UX Designer", image: ashraf },
     { name: "Chidiebere Edeh", role: "Graphic Designer", image: joel },
     { name: "Chigozie Erasmus", role: "Graphic Designer", image: erasmus },
     
