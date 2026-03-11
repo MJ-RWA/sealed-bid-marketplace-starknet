@@ -95,8 +95,8 @@ function ExploreMarket({ jobs =[] }) {
             </span>
         </div>
         
-        <div>
-            <h2>{job.title}</h2>
+        <div className="carddetails">
+            <h2 className="carddetailstitle">{job.title}</h2>
             <p>{job.description || "No description provided"}</p>
         </div>
         
