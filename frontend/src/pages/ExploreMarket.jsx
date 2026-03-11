@@ -45,51 +45,52 @@ function ExploreMarket({ jobs = [] }) {
 
         {jobs.length === 0 && <p style={{marginTop: '20px'}}>No jobs available yet.</p>}
     
-        {jobs
-          .filter(job => job && job.id)
-          .map((job) => (
-            <Link
-              key={job.id}
-              to={`/jobs/${job.id}`}
-              state={{ background: location }}
-              className="job-card-link"
-            >
-              <div className="job-card" style={{ padding: "20px" }}>
-                <div className="jobcarddetail">
-                  <span className={statusClasses[job.status] || "state"}>{job.status}</span>
-                  <span className="amount">
-                    {job.budget || "Budget not set"}
-                  </span>
-                </div>
-                
-                <div>
-                  <h2>{job.title}</h2>
-                  <p>{job.description?.substring(0, 120) || "No description provided"}...</p>
-                </div>
-                
-                <hr />
-                
-                <div className="jobcarddetail2">
-                  <div className="employer">
-                    <span>
-                      <FontAwesomeIcon icon={faCircleUser} size="lg" style={{ color: "var(--Emyr-bg-txt)" }} />
-                      Employer: {(job.employer_address || job.employerAddress)?.slice(0, 6)}...
-                    </span>
-                  </div>
-                  <div className="deadline">
-                    <span className="deadline-time">Deadline</span>
-                    <span className={`deadline-time ${timers[job.id] <= 0 ? 'expired' : ''}`}>
-                      {timers[job.id] !== undefined 
-                        ? formatTime(timers[job.id]) 
-                        : "N/A"}
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </Link>
-          ))}
-      </div>
-    </div>      
+      {jobs
+      .filter(job => job && job.id)
+      .map((job) => (
+        <Link
+          key={job.id}
+          to={`/jobs/${job.id}`}
+          state={{ background: location }}
+          className="job-card-link"
+        >
+
+    <div className={`job-card ${job.status === "COMPLETED" ? "job-completed" : ""}`} style={{ padding: "20px" }}>
+        <div class="jobcarddetail">
+            <span  className={state[job.status]}>{job.status}</span>
+            <span class="amount">
+              
+              {job.budget || "Budget not set"}
+            </span>
+        </div>
+        
+        <div className="carddetails">
+            <h2 className="carddetailstitle">{job.title}</h2>
+            <p>{job.description || "No description provided"}</p>
+        </div>
+        
+         <hr />
+         
+         <div className ="jobcarddetail2">
+          <div className="employer">
+           <span><FontAwesomeIcon icon={faCircleUser} size="lg" style={{color: "var(--Emyr-bg-txt)"}} />Employer: {job.employerAddress?.slice(0, 6)}...</span>
+           </div>
+            <div className="deadline">
+            <span className="deadline-time">Deadline</span>
+            <span className={`deadline-time ${timers[job.id] <= 0 ? 'expired' : ''}`}>
+            {timers[job.id] !== undefined 
+            ? formatTime(timers[job.id]) 
+          : "N/A"}
+           </span>
+            </div>
+         </div>
+    </div>
+   </Link>
+
+      ))}
+</div>
+</div>      
+    </>
   );
 }
 

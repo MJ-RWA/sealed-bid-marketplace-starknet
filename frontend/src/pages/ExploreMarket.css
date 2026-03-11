@@ -40,7 +40,11 @@ justify-content: space-between;
   line-clamp: 2; 
   -webkit-box-orient: vertical;
   overflow: hidden;
-
+  -webkit-line-clamp: 2; /* Change this to the max lines you want */
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
 
 .job-card:hover {
@@ -223,4 +227,13 @@ hr {
   color: rgba(255, 0, 0, 0.2);
   font-size: 2rem;
   z-index: 10;
+}
+
+.carddetailstitle{
+  display: -webkit-box;
+  line-clamp: 2; /* Change this to the max lines you want */
+  -webkit-box-orient: vertical;  
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: break-word;
 }
