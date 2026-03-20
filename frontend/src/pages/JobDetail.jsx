@@ -156,7 +156,7 @@ function JobDetail({ jobs, address, role, onUpdate }) {
     </div>
   );
 }
-
+// Last sections
 const overlayStyle = { position: "fixed", inset: 0, background: "rgba(7, 12, 35, 0.85)", backdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 9999 };
 const modalStyle = { background: "var(--Navbar-bg)", padding: "40px", borderRadius: "15px", width: "95%", maxWidth: "600px", color: "white", border: "1px solid var(--border-main)", maxHeight: '85vh', overflowY: 'auto' };
 
