@@ -1,10 +1,12 @@
  
 .job-card{ 
- width: 300px;
- height: 250px;
+width: 100%; 
+min-height: 250px; 
+max-width: 400px;
 display: flex;
 flex-direction: column;
 justify-content: space-between;
+box-sizing: border-box;
 }
 
 .job-card-link {
@@ -14,24 +16,36 @@ justify-content: space-between;
 }
 
 .job-card {
+  flex: 0 1 380px; 
+  max-width: 400px; 
+  min-height: 280px;
   border: 1px solid var(--border-main);
-  padding: 20px;
+  padding: 24px;
   cursor: pointer;
   transition: background 0.2s, transform 0.1s;
   background:var(--Navbar-bg); ;
   border-radius: 15px;
-  margin-right: 50px; 
-  margin-top: 20px;
-  max-width: 450px;
+  margin-right: 0; 
+  margin-top: 0;
   box-sizing: border-box; 
+  position: relative; 
+  overflow: hidden;
 }
 
 .job-card p{
-  margin: 0;
+   margin: 10px 0;
+   height: 60px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap; 
+    display: -webkit-box;
+   line-clamp: 2; /* Show 3 lines then ellipse */
+   -webkit-box-orient: vertical;
+   white-space: normal;
 }
+
+
+
 .job-card h2 {
   font-size: 1.5rem;
   color: var(--text-main);
@@ -62,9 +76,11 @@ justify-content: space-between;
 
 #cardheading h1{
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif ;
-  font-size: 2.5rem;
+  font-size: clamp(1.8rem, 8vw, 3rem);
   font-weight: 600;
   color: var(--text-main);
+  line-height: 1.2;
+  word-wrap: break-word;
 }
 
 .jobcarddetail{
@@ -121,10 +137,13 @@ hr {
 
 .jobcarddetail2{
   display: flex;
+  flex-direction: row;
   justify-content: space-between;
   align-items: center;
   color: var(--text-secondary);
 }
+
+
 
 .deadline{
   display: flex;
@@ -181,23 +200,30 @@ hr {
 .card-container {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px; 
+  gap: 25px; 
   justify-content: flex-start;
+  width: 100%;
+  max-width: 1225px; /* Prevents cards from spreading too far on ultrawide monitors */
+  margin: 0 auto; /* Centers the whole container */
+  padding: 40px 20px;
 }
 
 @media (max-width: 600px) {
   .card-container {
+    padding:0 10px;
     justify-content: center;
   }
 
   .job-card {
-    display: flex;
+  display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 280px;
   width: 100%; 
   box-sizing: border-box;
   margin-bottom: 20px;
+  margin-right: 0 !important;
+  margin-left:0;
   max-width: 400px; 
   }
 
@@ -236,4 +262,30 @@ hr {
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-word;
+}
+
+@media (max-width: 480px) {
+  .jobcarddetail2 {
+    flex-direction: column; /* Stack them vertically on mobile */
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .deadline {
+    width: 100%;
+    align-items: flex-start;
+    margin-top: 10px;
+  }
+
+  .deadline span {
+    display: inline-block;
+  }
+}
+
+
+#cardheading {
+  max-width: 1200px; 
+  margin: 0 auto 20px auto;
+  padding: 0 20px; 
+  text-align: left;
 }
