@@ -48,8 +48,11 @@ body {
 }
 
 .main-content {
-  flex: 1; /* Pushes footer to bottom */
-  padding:  25px 100px;
+  flex: 1;
+  width: 100%;
+  /* max-width: 1200px;  */
+  margin: 0 auto;   
+  padding: 5px 10px;
 }
 
 @media (max-width: 480px) {
@@ -58,7 +61,7 @@ body {
   }
 
   .main-content {
-    padding: 15px 20px; /* Reduce side padding */
+    padding: 40px 30px; /* Reduce side padding */
   }
 }
 
